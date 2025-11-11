@@ -1,0 +1,65 @@
+# Core Django
+Django==5.2.8
+asgiref==3.10.0
+sqlparse==0.5.3
+tzdata==2025.2
+
+# Django REST Framework (API)
+djangorestframework==3.15.2
+django-cors-headers==4.6.0
+django-filter==24.3
+
+# Autenticación
+django-allauth==65.13.0
+PyJWT==2.10.1
+oauthlib==3.3.1
+
+# WebSockets (Chat en tiempo real)
+channels==4.2.0
+channels-redis==4.2.0
+daphne==4.1.2
+
+# Base de datos
+psycopg2-binary==2.9.10
+pymongo==4.10.1
+
+# Tareas asíncronas
+celery==5.4.0
+redis==5.2.1
+
+# Procesamiento de imágenes
+Pillow==12.0.0
+django-imagekit==5.0.0
+
+# Geolocalización
+geopy==2.4.1
+
+# Pagos
+mercadopago==2.2.3
+
+# PDFs (facturas)
+reportlab==4.2.5
+
+# Utilidades
+django-environ==0.12.0
+requests==2.32.5
+urllib3==2.5.0
+certifi==2025.10.5
+charset-normalizer==3.4.4
+idna==3.11
+
+# Seguridad
+cryptography==46.0.3
+cffi==2.0.0
+pycparser==2.23
+
+# Testing
+pytest==8.3.4
+pytest-django==4.9.0
+
+# Documentación API
+drf-yasg==1.21.7
+
+# Herramientas de desarrollo
+django-debug-toolbar==4.4.6
+django-extensions==3.2.3
