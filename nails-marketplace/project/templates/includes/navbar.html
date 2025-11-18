@@ -1,0 +1,52 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-hand-sparkles" style="color: var(--primary);"></i>
+            <span style="color: var(--primary);">Unas Bellas</span> Insumos de Uñas
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/api/v1/products/">
+                        <i class="fas fa-shopping-bag"></i> Productos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/api/v1/categories/">
+                        <i class="fas fa-th-large"></i> Categorías
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i> Más
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/"><i class="fas fa-user-shield"></i> Admin</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#about"><i class="fas fa-info-circle"></i> Acerca de</a></li>
+                        <li><a class="dropdown-item" href="#contact"><i class="fas fa-envelope"></i> Contacto</a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <div class="d-flex gap-2">
+                <a href="/api/v1/auth/login/" class="btn btn-outline-primary">
+                    <i class="fas fa-sign-in-alt"></i> Ingresar
+                </a>
+                <a href="/api/v1/users/register/" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Registrarse
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

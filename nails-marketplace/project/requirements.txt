@@ -74,3 +74,81 @@ urllib3==2.5.0
 vine==5.1.0
 wcwidth==0.2.14
 zope.interface==8.1
+
+#frontend
+# Core Django (para templates y vistas)
+Django==5.2.8
+asgiref==3.10.0
+sqlparse==0.5.3
+tzdata==2025.2
+
+# Autenticación (integración con backend)
+PyJWT==2.10.1
+requests==2.32.5
+
+# WebSockets cliente (para chat)
+websocket-client==1.8.0
+
+# Utilidades
+django-environ==0.12.0
+Pillow==12.0.0
+
+# Procesamiento de formularios
+django-crispy-forms==2.3
+crispy-bootstrap5==2024.10
+
+# Cliente HTTP mejorado
+httpx==0.28.1
+
+# Certificados y seguridad
+certifi==2025.10.5
+urllib3==2.5.0
+charset-normalizer==3.4.4
+cryptography==46.0.3
+
+# Herramientas de desarrollo
+django-debug-toolbar==4.4.6
+django-extensions==3.2.3
+
+#mobile
+# Kivy Framework
+#kivy==2.3.0
+#kivy-garden==0.1.5
+
+# Dependencias de Kivy
+#Kivy-Garden==0.1.5
+#kivymd==1.2.0  # Material Design para Kivy
+
+# Cliente API REST
+#requests==2.32.5
+#httpx==0.28.1
+
+# WebSockets (chat)
+#websocket-client==1.8.0
+
+# Autenticación JWT
+#PyJWT==2.10.1
+
+# Procesamiento de imágenes
+#Pillow==12.0.0
+
+# Geolocalización (GPS)
+#plyer==2.1.0  # Acceso a funciones del dispositivo
+
+# Almacenamiento local
+#python-dotenv==1.0.1
+
+# Utilidades
+#certifi==2025.10.5
+#urllib3==2.5.0
+#charset-normalizer==3.4.4
+
+# QR Code (para pagos)
+#qrcode==8.0
+
+# Build tools (para generar APK)
+#buildozer==1.5.0  # Solo en Linux/Mac
+#python-for-android==2024.1.21  # Para compilar a Android
+
+# Herramientas de testing
+#pytest==8.3.4
