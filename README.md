@@ -3,9 +3,8 @@
 Plataforma colaborativa para la compra, venta e intercambio de insumos para uñas en comunidades locales.
 
 <p align="center">
-<img width="300" height="300" alt="Image" src="![Image](https://github.com/user-attachments/assets/91bf011b-527a-44a1-9131-419153abcb87)" />
-
-<img width="300" height="300" alt="Image" src="![Image](https://github.com/user-attachments/assets/1738e6cd-78a6-4518-85b7-e9bb288f16ad)" />
+<img width="1156" height="350" alt="Image" src="https://github.com/user-attachments/assets/2d10080d-8c0d-48f9-9ca5-88540b8acf37" />
+<img width="1134" height="350" alt="Image" src="https://github.com/user-attachments/assets/8e123953-3aa8-41a7-937d-6b6a49802aa1" />
 </p>
 
 📑 Tabla de Contenidos
