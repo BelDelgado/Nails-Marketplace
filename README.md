@@ -2,26 +2,28 @@
 
 Plataforma colaborativa para la compra, venta e intercambio de insumos para uñas en comunidades locales.
 
-<img width="300" height="300" alt="Image" src="https://github.com/user-attachments/assets/3bab1b83-dc98-4325-92cd-9e0c0e5a8b8e" />
+<img width="300" height="300" alt="Image" src="![Image](https://github.com/user-attachments/assets/aea42c54-b8e9-4e7f-8027-52581c85d7be)" />
+
+<img width="300" height="300" alt="Image" src="![Image](https://github.com/user-attachments/assets/a927c785-5dce-401c-aafe-893ee12d1612)" />
+
 
 📑 Tabla de Contenidos
 
 Introducción
 Tecnologías
-Arquitectura
-Contribución
+Contacto
 Roadmap
 Equipo
 
 
 🎯 Introducción
-Nails Marketplace es una plataforma web y móvil diseñada para manicuristas, nail artists y entusiastas de la belleza que deseen:
+"Unas Bellas - Insumos de uñas" es una plataforma web diseñada para manicuristas, nail artists y entusiastas de la belleza que deseen:
 
 ✅ Vender insumos de uñas (esmaltes, geles, herramientas, decoraciones)
 ✅ Comprar productos de calidad a precios competitivos
-✅ Intercambiar artículos con otros miembros de la comunidad
 ✅ Conectar con vendedores locales mediante geolocalización
 ✅ Comunicarse en tiempo real a través de chat integrado
+
 
 🛠️ Tecnologías
 Backend (API REST)
@@ -42,7 +44,7 @@ JavaScript (ES6+) - Interactividad del cliente
 Leaflet.js - Mapas interactivos
 WebSockets - Chat en tiempo real
 
-Mobile App
+Mobile
 
 Kivy 2.3.0 - Framework multiplataforma para Python
 KivyMD 1.2.0 - Material Design para Kivy
@@ -52,45 +54,16 @@ Servicios Externos
 
 MercadoPago API - Procesamiento de pagos
 MongoDB Atlas - Base de datos NoSQL en la nube
-Cloudinary (opcional) - CDN para imágenes
+Cloudinary - CDN para imágenes
 Mapbox/Leaflet - Servicios de mapas
 
-🏗️ Arquitectura
-nails-marketplace/
-│
-├── backend/                    # API REST con Django
-│   ├── apps/
-│   │   ├── users/             # Autenticación y perfiles
-│   │   ├── products/          # Catálogo de productos
-│   │   ├── chat/              # Mensajería en tiempo real
-│   │   ├── payments/          # Integración de pagos
-│   │   ├── invoices/          # Facturación
-│   │   └── locations/         # Geolocalización
-│   ├── config/                # Configuración Django
-│   └── manage.py
-│
-├── frontend/                  # Aplicación web Django
-│   ├── templates/             # HTML templates
-│   ├── static/                # CSS, JS, imágenes
-│   └── manage.py
-│
-├── mobile/                    # App móvil Kivy
-│   ├── app/
-│   │   ├── screens/           # Pantallas de la app
-│   │   ├── api/               # Cliente API REST
-│   │   └── main.py
-│   └── buildozer.spec         # Configuración Android
-│
-└── docs/                      # Documentación
-
-📄 Licencia
-Este proyecto está bajo la Licencia MIT. Ver el archivo LICENSE para más detalles.
 
 📞 Contacto
 Para preguntas, sugerencias o reportar problemas:
 
 Email: contacto@nailsmarketplace.com
 GitHub Issues: Crear issue
+
 
 🔮 Roadmap
 ✅ Fase 1 (Completada)
@@ -99,7 +72,6 @@ GitHub Issues: Crear issue
  CRUD de productos
  Sistema de categorías
  Favoritos y reseñas
- API REST documentada
 
 🚧 Fase 2 (En desarrollo)
 
@@ -112,9 +84,8 @@ GitHub Issues: Crear issue
 
  App móvil con Kivy
  Panel de analytics para vendedores
- Sistema de cupones y descuentos
  Integración con redes sociales
 
  <p align="center">
-  Hecho con ❤️ por Bell
+  Hecho con ❤️ por Belén
 </p>
