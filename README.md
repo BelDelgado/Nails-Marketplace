@@ -1,12 +1,12 @@
 💅 Nails Marketplace
 
 Plataforma colaborativa para la compra, venta e intercambio de insumos para uñas en comunidades locales.
-![Dashboard](![Image](https://github.com/user-attachments/assets/e961e889-1830-4479-bae1-a7e807e0acf9)) 
 
-<img width="300" height="300" alt="Image" src="![Image](https://github.com/user-attachments/assets/e961e889-1830-4479-bae1-a7e807e0acf9)" />
+<p align="center">
+<img width="300" height="300" alt="Image" src="![Image](https://github.com/user-attachments/assets/91bf011b-527a-44a1-9131-419153abcb87)" />
 
-<img width="300" height="300" alt="Image" src="![Image](https://github.com/user-attachments/assets/739658a4-83f9-48fe-a956-93e34501ef47)" />
-
+<img width="300" height="300" alt="Image" src="![Image](https://github.com/user-attachments/assets/1738e6cd-78a6-4518-85b7-e9bb288f16ad)" />
+</p>
 
 📑 Tabla de Contenidos
 
