@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block title %}Registrarse - Nails Marketplace{% endblock %}
+
+{% block content %}
+<section class="py-5 min-vh-100" style="background: linear-gradient(135deg, #ffc0cb 0%, #ff69b4 100%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-lg border-0 rounded-4">
+                    <div class="card-body p-5">
+                        <!-- Header -->
+                        <div class="text-center mb-4">
+                            <i class="fas fa-user-plus fa-4x mb-3" style="color: var(--primary);"></i>
+                            <h2 class="fw-bold mb-2">Crea tu cuenta</h2>
+                            <p class="text-muted">Únete a la comunidad de nail artists</p>
+                        </div>
+
+                        <!-- Google Signup -->
+                        <a href="{% provider_login_url 'google' %}" class="btn btn-light btn-lg w-100 mb-3 border shadow-sm">
+                            <i class="fab fa-google text-danger me-2"></i>
+                            Registrarse con Google
+                        </a>
+
+                        <!-- Divider -->
+                        <div class="position-relative my-4">
+                            <hr>
+                            <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">
+                                o completa el formulario
+                            </span>
+                        </div>
+
+                        <!-- Signup Form -->
+                        <form method="post" action="{% url 'account_signup' %}">
+                            {% csrf_token %}
+                            
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                            {% endif %}
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Nombre</label>
+                                    <input type="text" name="first_name" class="form-control" placeholder="Tu nombre">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Apellido</label>
+                                    <input type="text" name="last_name" class="form-control" placeholder="Tu apellido">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Usuario</label>
+                                <input type="text" 
+                                       name="username" 
+                                       class="form-control" 
+                                       placeholder="Elige un nombre de usuario"
+                                       value="{{ form.username.value|default:'' }}"
+                                       required>
+                                {% if form.username.errors %}
+                                    <div class="text-danger small mt-1">{{ form.username.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="email" 
+                                       name="email" 
+                                       class="form-control" 
+                                       placeholder="tu@email.com"
+                                       value="{{ form.email.value|default:'' }}"
+                                       required>
+                                {% if form.email.errors %}
+                                    <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Contraseña</label>
+                                <input type="password" 
+                                       name="password1" 
+                                       class="form-control" 
+                                       placeholder="Mínimo 8 caracteres"
+                                       required>
+                                {% if form.password1.errors %}
+                                    <div class="text-danger small mt-1">{{ form.password1.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <small>
+                                        <i class="fas fa-info-circle"></i>
+                                        Mínimo 8 caracteres, no solo números
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Confirmar Contraseña</label>
+                                <input type="password" 
+                                       name="password2" 
+                                       class="form-control" 
+                                       placeholder="Repite tu contraseña"
+                                       required>
+                                {% if form.password2.errors %}
+                                    <div class="text-danger small mt-1">{{ form.password2.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input type="checkbox" class="form-check-input" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    Acepto los <a href="#" class="text-decoration-none">términos y condiciones</a>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100 shadow">
+                                <i class="fas fa-rocket me-2"></i>Crear Cuenta
+                            </button>
+                        </form>
+
+                        <!-- Login Link -->
+                        <div class="text-center pt-3 border-top mt-4">
+                            <p class="mb-0 text-muted">
+                                ¿Ya tienes cuenta? 
+                                <a href="{% url 'account_login' %}" class="text-decoration-none fw-semibold">
+                                    Inicia sesión
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Back to Home -->
+                <div class="text-center mt-3">
+                    <a href="/" class="text-white text-decoration-none">
+                        <i class="fas fa-arrow-left me-2"></i>Volver al inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
