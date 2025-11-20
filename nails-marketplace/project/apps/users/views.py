@@ -21,6 +21,8 @@ class UserViewSet(viewsets.ModelViewSet):
     
     Endpoints:
     - POST /api/v1/users/register/ - Registrar nuevo usuario
+    - /api/v1/auth/login/ - Iniciar sesión (proporcionado por SimpleJWT)
+    - /api/v1/auth/refresh/ - Refrescar token (proporcionado por SimpleJWT)
     - GET /api/v1/users/profile/ - Obtener perfil del usuario actual
     - PUT/PATCH /api/v1/users/profile/ - Actualizar perfil
     - POST /api/v1/users/change-password/ - Cambiar contraseña

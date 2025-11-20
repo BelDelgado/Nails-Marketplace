@@ -8,6 +8,7 @@ Plataforma colaborativa para la compra y venta de insumos para uñas en comunida
 <img width="1134" height="350" alt="Image" src="https://github.com/user-attachments/assets/8e123953-3aa8-41a7-937d-6b6a49802aa1" />
 </p>
 
+
 📑 Tabla de Contenidos
 
 Introducción
@@ -19,6 +20,7 @@ Contacto
 Roadmap
 
 Equipo
+
 
 
 🎯 Introducción
@@ -36,6 +38,7 @@ Equipo
 
 🛠️ Tecnologías
 
+
 Backend (API REST)
 
 Django 5.2.8 - Framework web robusto
@@ -52,6 +55,7 @@ Redis - Caché y broker para Celery
 
 Celery - Tareas asíncronas (emails, notificaciones)
 
+
 Frontend Web
 
 Django Templates - Renderizado del lado del servidor
@@ -63,6 +67,7 @@ JavaScript (ES6+) - Interactividad del cliente
 Leaflet.js - Mapas interactivos
 
 WebSockets - Chat en tiempo real
+
 
 Mobile
 
@@ -83,6 +88,7 @@ Cloudinary - CDN para imágenes
 Mapbox/Leaflet - Servicios de mapas
 
 
+
 📞 Contacto
 
 Para preguntas, sugerencias o reportar problemas:
@@ -90,6 +96,7 @@ Para preguntas, sugerencias o reportar problemas:
 Email: contacto@nailsmarketplace.com
 
 GitHub Issues: Crear issue
+
 
 
 🔮 Roadmap
@@ -104,6 +111,7 @@ GitHub Issues: Crear issue
 
  Favoritos y reseñas
 
+
 🚧 Fase 2 (En desarrollo)
 
  Chat en tiempo real con WebSockets
@@ -114,13 +122,15 @@ GitHub Issues: Crear issue
 
  Sistema de notificaciones
 
+
 📋 Fase 3 (Planeada)
 
  App móvil con Kivy
 
  Panel de analytics para vendedores
- 
+
  Integración con redes sociales
+
 
  <p align="center">
   Hecho con ❤️ por Belén

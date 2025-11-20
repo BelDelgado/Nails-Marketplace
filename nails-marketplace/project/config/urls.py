@@ -3,15 +3,24 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import home_view 
+from .views import home_view, profile_dashboard, profile_edit
+from rest_framework import permissions      
+
 
 urlpatterns = [
     # Home
     path('', home_view, name='home'),
-    
+
     # Admin
     path('admin/', admin.site.urls),
-    
+
+    # AllAuth URLs
+    path("accounts/", include("allauth.urls")),  
+    path('api-auth/', include('rest_framework.urls')),
+    # Profile URLs
+    path('profile/', profile_dashboard, name='profile_dashboard'),
+    path('profile/edit/', profile_edit, name='profile_edit'),
+
     # API v1
     path('api/v1/', include('apps.users.urls')),
     path('api/v1/', include('apps.products.urls')),

@@ -2,7 +2,7 @@
     <div class="container">
         <a class="navbar-brand" href="/">
             <i class="fas fa-hand-sparkles" style="color: var(--primary);"></i>
-            <span style="color: var(--primary);">Unas Bellas</span> Insumos de Uñas
+            <span style="color: var(--primary);">Nails</span> Marketplace
         </a>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -39,14 +39,87 @@
                 </li>
             </ul>
             
-            <div class="d-flex gap-2">
-                <a href="/api/v1/auth/login/" class="btn btn-outline-primary">
-                    <i class="fas fa-sign-in-alt"></i> Ingresar
-                </a>
-                <a href="/api/v1/users/register/" class="btn btn-primary">
-                    <i class="fas fa-user-plus"></i> Registrarse
-                </a>
-            </div>
+            <!-- Usuario logueado o botones de login -->
+            {% if user.is_authenticated %}
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Notificaciones (opcional) -->
+                    <button class="btn btn-light position-relative">
+                        <i class="fas fa-bell"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            3
+                            <span class="visually-hidden">notificaciones</span>
+                        </span>
+                    </button>
+                    
+                    <!-- Dropdown de Usuario -->
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2" 
+                                type="button" 
+                                id="userDropdown" 
+                                data-bs-toggle="dropdown">
+                            {% if user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle" width="30" height="30" alt="Avatar">
+                            {% else %}
+                                <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" 
+                                     style="width: 30px; height: 30px;">
+                                    <i class="fas fa-user fa-sm text-white"></i>
+                                </div>
+                            {% endif %}
+                            <span class="d-none d-md-inline">{{ user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li>
+                                <div class="dropdown-header">
+                                    <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ user.email }}</small>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'profile_dashboard' %}">
+                                    <i class="fas fa-user me-2"></i>Mi Perfil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-box me-2"></i>Mis Productos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-heart me-2"></i>Favoritos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-shopping-cart me-2"></i>Compras
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'profile_edit' %}">
+                                    <i class="fas fa-cog me-2"></i>Configuración
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'account_logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            {% else %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'account_login' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt"></i> Ingresar
+                    </a>
+                    <a href="{% url 'account_signup' %}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Registrarse
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </nav>
