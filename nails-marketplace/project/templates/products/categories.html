@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categorías - Nails Marketplace{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg text-white py-5">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-3">Explora Nuestras Categorías</h1>
+        <p class="lead">Encuentra todo lo que necesitas para tu nail art</p>
+    </div>
+</section>
+
+<!-- Categories Grid -->
+<section class="py-5">
+    <div class="container">
+        {% if categories %}
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-md-6 col-lg-4">
+                <a href="{% url 'products_list' %}?category={{ category.slug }}" class="text-decoration-none">
+                    <div class="card category-card border-0 shadow-lg h-100 overflow-hidden">
+                        <!-- Imagen de categoría -->
+                        <div class="position-relative" style="height: 250px; overflow: hidden;">
+                            {% if category.image %}
+                                <img src="{{ category.image.url }}" 
+                                     class="w-100 h-100" 
+                                     style="object-fit: cover;"
+                                     alt="{{ category.name }}">
+                            {% else %}
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center"
+                                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <span style="font-size: 5rem;">{{ category.icon|default:"💅" }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Overlay oscuro -->
+                            <div class="position-absolute top-0 start-0 w-100 h-100" 
+                                 style="background: rgba(0,0,0,0.3);"></div>
+                            
+                            <!-- Contenido sobre la imagen -->
+                            <div class="position-absolute bottom-0 start-0 w-100 p-4 text-white">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if category.icon %}
+                                    <span class="fs-1 me-3">{{ category.icon }}</span>
+                                    {% endif %}
+                                    <div>
+                                        <h3 class="mb-0 fw-bold">{{ category.name }}</h3>
+                                        <small class="opacity-75">
+                                            {% with count=category.products.count %}
+                                                {{ count }} producto{{ count|pluralize }}
+                                            {% endwith %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Descripción -->
+                        <div class="card-body bg-white">
+                            <p class="text-muted mb-3">
+                                {% if category.description %}
+                                    {{ category.description|truncatewords:15 }}
+                                {% else %}
+                                    Explora todos los productos de esta categoría
+                                {% endif %}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="btn btn-sm btn-primary">
+                                    Ver productos <i class="fas fa-arrow-right ms-2"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+            <h3 class="text-muted">No hay categorías disponibles</h3>
+            <p class="text-muted">Las categorías aparecerán aquí una vez que se agreguen desde el admin.</p>
+            {% if user.is_staff %}
+            <a href="{% url 'admin:products_category_add' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i>Agregar categoría
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.category-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.category-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+}
+
+.category-card:hover img,
+.category-card:hover > div {
+    transform: scale(1.05);
+}
+
+.category-card img,
+.category-card > div > div {
+    transition: transform 0.3s ease;
+}
+</style>
+{% endblock %}

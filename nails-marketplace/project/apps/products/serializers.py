@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, Favorite, ExchangeRequest
+from .models import Category, Product, ProductImage, Cart, CartItem
 from apps.users.serializers import UserSerializer
 
 
@@ -30,16 +30,16 @@ class ProductListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     seller_username = serializers.CharField(source='seller.username', read_only=True)
     primary_image = serializers.SerializerMethodField()
-    is_favorited = serializers.SerializerMethodField()
+
     
     class Meta:
         model = Product
         fields = [
             'id', 'title', 'price', 'product_type', 'condition', 'status',
             'category_name', 'seller_username', 'primary_image', 'city',
-            'views', 'favorites_count', 'is_favorited', 'created_at'
+            'views', 'created_at'
         ]
-        read_only_fields = ['id', 'views', 'favorites_count', 'created_at']
+        read_only_fields = ['id', 'views','created_at']
     
     def get_primary_image(self, obj):
         """Obtener imagen principal del producto"""
@@ -49,13 +49,6 @@ class ProductListSerializer(serializers.ModelSerializer):
             if request:
                 return request.build_absolute_uri(primary_image.image.url)
         return None
-    
-    def get_is_favorited(self, obj):
-        """Verificar si el usuario actual tiene el producto en favoritos"""
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return Favorite.objects.filter(user=request.user, product=obj).exists()
-        return False
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
@@ -68,7 +61,6 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     )
     seller = UserSerializer(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
-    is_favorited = serializers.SerializerMethodField()
     is_owner = serializers.SerializerMethodField()
     
     class Meta:
@@ -77,21 +69,14 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'id', 'seller', 'category', 'category_id', 'title', 'description',
             'product_type', 'condition', 'status', 'price', 'stock',
             'brand', 'color', 'size', 'city', 'state',
-            'latitude', 'longitude', 'views', 'favorites_count',
-            'images', 'is_favorited', 'is_owner',
+            'latitude', 'longitude', 'views',
+            'images','is_owner',
             'created_at', 'updated_at', 'expires_at'
         ]
         read_only_fields = [
-            'id', 'seller', 'views', 'favorites_count', 
+            'id', 'seller', 'views', 
             'created_at', 'updated_at'
         ]
-    
-    def get_is_favorited(self, obj):
-        """Verificar si está en favoritos"""
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return Favorite.objects.filter(user=request.user, product=obj).exists()
-        return False
     
     def get_is_owner(self, obj):
         """Verificar si el usuario actual es el propietario"""
@@ -160,72 +145,33 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-    """Serializer para favoritos"""
+# Serializers para el carrito
+class CartItemSerializer(serializers.ModelSerializer):
+    """Serializer para items del carrito"""
     product = ProductListSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(),
         source='product',
         write_only=True
     )
+    subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True, source='get_subtotal')
     
     class Meta:
-        model = Favorite
-        fields = ['id', 'product', 'product_id', 'created_at']
-        read_only_fields = ['id', 'created_at']
-    
-    def create(self, validated_data):
-        """Crear favorito"""
-        validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
+        model = CartItem
+        fields = ['id', 'product', 'product_id', 'quantity', 'subtotal', 'added_at']
+        read_only_fields = ['id', 'added_at']
 
 
-class ExchangeRequestSerializer(serializers.ModelSerializer):
-    """Serializer para solicitudes de intercambio"""
-    requester_username = serializers.CharField(source='requester.username', read_only=True)
-    owner_username = serializers.CharField(source='owner.username', read_only=True)
-    offered_product_title = serializers.CharField(source='offered_product.title', read_only=True)
-    requested_product_title = serializers.CharField(source='requested_product.title', read_only=True)
+class CartSerializer(serializers.ModelSerializer):
+    """Serializer para el carrito"""
+    items = CartItemSerializer(many=True, read_only=True)
+    total = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True, source='get_total')
+    items_count = serializers.SerializerMethodField()
     
     class Meta:
-        model = ExchangeRequest
-        fields = [
-            'id', 'requester', 'requester_username', 'owner', 'owner_username',
-            'offered_product', 'offered_product_title', 'requested_product',
-            'requested_product_title', 'message', 'status',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'requester', 'owner', 'created_at', 'updated_at']
+        model = Cart
+        fields = ['id', 'user', 'items', 'total', 'items_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
     
-    def create(self, validated_data):
-        """Crear solicitud de intercambio"""
-        request = self.context['request']
-        validated_data['requester'] = request.user
-        validated_data['owner'] = validated_data['requested_product'].seller
-        return super().create(validated_data)
-    
-    def validate(self, attrs):
-        """Validaciones personalizadas"""
-        request = self.context['request']
-        offered_product = attrs.get('offered_product')
-        requested_product = attrs.get('requested_product')
-        
-        # Verificar que el producto ofrecido sea del usuario
-        if offered_product and offered_product.seller != request.user:
-            raise serializers.ValidationError({
-                'offered_product': 'Solo puedes ofrecer tus propios productos.'
-            })
-        
-        # Verificar que no se intercambie con uno mismo
-        if requested_product and requested_product.seller == request.user:
-            raise serializers.ValidationError({
-                'requested_product': 'No puedes solicitar tus propios productos.'
-            })
-        
-        # Verificar que el producto solicitado permita intercambios
-        if requested_product and requested_product.product_type == 'sale':
-            raise serializers.ValidationError({
-                'requested_product': 'Este producto no está disponible para intercambio.'
-            })
-        
-        return attrs
+    def get_items_count(self, obj):
+        return obj.items.count()

@@ -54,15 +54,26 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'  # Permitir login con username o email
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'optional'  # 'mandatory' para requerir verificación
-ACCOUNT_USERNAME_REQUIRED = True
-ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False
+# Métodos de login permitidos
+ACCOUNT_LOGIN_METHODS = {"email", "username"}
+
+# Campos del formulario de registro (los * significan obligatorios)
+ACCOUNT_SIGNUP_FIELDS = [
+    "email*",
+    "username*",
+    "password1*",
+    "password2*",
+]
+
+# Opciones de verificación de email
+ACCOUNT_EMAIL_VERIFICATION = "optional"  # usar "mandatory" si querés obligar verificación
+
+# Otras configuraciones recomendadas
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGOUT_ON_GET = False
 
+# Configuración de social login
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'
 
@@ -146,7 +157,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key

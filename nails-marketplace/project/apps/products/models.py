@@ -10,6 +10,7 @@ class Category(models.Model):
     slug = models.SlugField(max_length=100, unique=True, verbose_name='Slug')
     description = models.TextField(blank=True, verbose_name='Descripción')
     icon = models.CharField(max_length=50, blank=True, verbose_name='Icono (nombre)')
+    image = models.ImageField(upload_to='categories/', blank=True, null=True, verbose_name='Imagen')
     is_active = models.BooleanField(default=True, verbose_name='Activa')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -28,8 +29,6 @@ class Product(models.Model):
     """
     TYPE_CHOICES = [
         ('sale', 'Venta'),
-        ('exchange', 'Intercambio'),
-        ('both', 'Venta/Intercambio'),
     ]
     
     CONDITION_CHOICES = [
@@ -84,8 +83,7 @@ class Product(models.Model):
     
     # Métricas
     views = models.IntegerField(default=0, verbose_name='Visualizaciones')
-    favorites_count = models.IntegerField(default=0, verbose_name='Favoritos')
-    
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de publicación')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Última actualización')
@@ -113,6 +111,22 @@ class Product(models.Model):
         self.views += 1
         self.save(update_fields=['views'])
 
+class Cart(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def get_total(self):
+        return sum(item.get_subtotal() for item in self.items.all())
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    def get_subtotal(self):
+        return self.product.price * self.quantity
 
 class ProductImage(models.Model):
     """
@@ -139,38 +153,6 @@ class ProductImage(models.Model):
             ProductImage.objects.filter(product=self.product, is_primary=True).update(is_primary=False)
         super().save(*args, **kwargs)
 
-
-class Favorite(models.Model):
-    """
-    Productos favoritos de usuarios
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites', verbose_name='Usuario')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='favorited_by', verbose_name='Producto')
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = 'Favorito'
-        verbose_name_plural = 'Favoritos'
-        unique_together = ['user', 'product']
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.user.username} ❤️ {self.product.title}"
-    
-    def save(self, *args, **kwargs):
-        """Incrementar contador de favoritos del producto"""
-        super().save(*args, **kwargs)
-        self.product.favorites_count = self.product.favorited_by.count()
-        self.product.save(update_fields=['favorites_count'])
-    
-    def delete(self, *args, **kwargs):
-        """Decrementar contador al eliminar"""
-        product = self.product
-        super().delete(*args, **kwargs)
-        product.favorites_count = product.favorited_by.count()
-        product.save(update_fields=['favorites_count'])
-
-
 class ProductView(models.Model):
     """
     Registro de visualizaciones de productos (para analytics)
@@ -188,60 +170,4 @@ class ProductView(models.Model):
     
     def __str__(self):
         return f"{self.product.title} - {self.viewed_at}"
-
-
-class ExchangeRequest(models.Model):
-    """
-    Solicitudes de intercambio entre usuarios
-    """
-    STATUS_CHOICES = [
-        ('pending', 'Pendiente'),
-        ('accepted', 'Aceptada'),
-        ('rejected', 'Rechazada'),
-        ('completed', 'Completada'),
-        ('cancelled', 'Cancelada'),
-    ]
-    
-    # Productos involucrados
-    offered_product = models.ForeignKey(
-        Product, 
-        on_delete=models.CASCADE, 
-        related_name='exchange_offers',
-        verbose_name='Producto ofrecido'
-    )
-    requested_product = models.ForeignKey(
-        Product, 
-        on_delete=models.CASCADE, 
-        related_name='exchange_requests',
-        verbose_name='Producto solicitado'
-    )
-    
-    # Usuarios
-    requester = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
-        related_name='exchange_requests_sent',
-        verbose_name='Solicitante'
-    )
-    owner = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
-        related_name='exchange_requests_received',
-        verbose_name='Propietario'
-    )
-    
-    # Detalles
-    message = models.TextField(blank=True, verbose_name='Mensaje')
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending', verbose_name='Estado')
-    
-    # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        verbose_name = 'Solicitud de Intercambio'
-        verbose_name_plural = 'Solicitudes de Intercambio'
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.requester.username} → {self.owner.username}: {self.get_status_display()}"
+ 

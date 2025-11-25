@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}Publicar Producto - Nails Marketplace{% endblock %}
+
+{% block content %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h3 class="mb-0">
+                            <i class="fas fa-plus-circle me-2"></i>Publicar Nuevo Producto
+                        </h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="product-form" enctype="multipart/form-data">
+                            <!-- Información Básica -->
+                            <h5 class="mb-3">Información Básica</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Título del Producto *</label>
+                                <input type="text" id="title" class="form-control form-control-lg" 
+                                       placeholder="Ej: Esmalte OPI Rojo Pasión" required>
+                                <div class="form-text">Sé claro y descriptivo</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Descripción *</label>
+                                <textarea id="description" class="form-control" rows="4" 
+                                          placeholder="Describe tu producto: características, uso, estado..." required></textarea>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Categoría *</label>
+                                    <select id="category" class="form-select" required>
+                                        <option value="">Selecciona una categoría</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Precio (ARS) *</label>
+                                    <input type="number" id="price" class="form-control" 
+                                           placeholder="0.00" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Stock *</label>
+                                    <input type="number" id="stock" class="form-control" 
+                                           value="1" min="1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Condición *</label>
+                                    <select id="condition" class="form-select" required>
+                                        <option value="new">Nuevo</option>
+                                        <option value="like_new">Como nuevo</option>
+                                        <option value="good">Buen estado</option>
+                                        <option value="fair">Estado aceptable</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Tipo *</label>
+                                    <select id="product_type" class="form-select" required>
+                                        <option value="sale">Venta</option>
+                                        <option value="exchange">Intercambio</option>
+                                        <option value="both">Venta/Intercambio</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Detalles Adicionales -->
+                            <h5 class="mb-3 mt-4">Detalles Adicionales</h5>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Marca</label>
+                                    <input type="text" id="brand" class="form-control" placeholder="OPI, Essie...">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Color</label>
+                                    <input type="text" id="color" class="form-control" placeholder="Rojo, Rosa...">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Tamaño/Volumen</label>
+                                    <input type="text" id="size" class="form-control" placeholder="15ml, 30ml...">
+                                </div>
+                            </div>
+                            
+                            <!-- Ubicación -->
+                            <h5 class="mb-3 mt-4">Ubicación</h5>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Ciudad</label>
+                                    <input type="text" id="city" class="form-control" placeholder="Buenos Aires">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Provincia</label>
+                                    <input type="text" id="state" class="form-control" placeholder="CABA">
+                                </div>
+                            </div>
+                            
+                            <!-- Imágenes -->
+                            <h5 class="mb-3 mt-4">Imágenes</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Sube hasta 5 imágenes</label>
+                                <input type="file" id="images" class="form-control" 
+                                       accept="image/*" multiple>
+                                <div class="form-text">Formatos: JPG, PNG. Máximo 2MB por imagen</div>
+                            </div>
+                            
+                            <!-- Preview de imágenes -->
+                            <div id="image-preview" class="row g-2 mb-3"></div>
+                            
+                            <!-- Botones -->
+                            <div class="d-flex gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg px-5">
+                                    <i class="fas fa-check me-2"></i>Publicar Producto
+                                </button>
+                                <a href="/products/" class="btn btn-outline-secondary btn-lg">
+                                    Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// Cargar categorías
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/v1/categories/');
+        const categories = await response.json();
+        
+        const select = document.getElementById('category');
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+// Preview de imágenes
+document.getElementById('images').addEventListener('change', function(e) {
+    const preview = document.getElementById('image-preview');
+    preview.innerHTML = '';
+    
+    Array.from(e.target.files).slice(0, 5).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            preview.innerHTML += `
+                <div class="col-md-4 col-lg-3">
+                    <div class="position-relative">
+                        <img src="${event.target.result}" class="img-thumbnail" style="height: 150px; object-fit: cover;">
+                        <span class="position-absolute top-0 start-0 m-2 badge bg-primary">
+                            ${index === 0 ? 'Principal' : `Imagen ${index + 1}`}
+                        </span>
+                    </div>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+// Enviar formulario
+document.getElementById('product-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        alert('Debes iniciar sesión para publicar productos');
+        window.location.href = '/accounts/login/';
+        return;
+    }
+    
+    // Deshabilitar botón
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Publicando...';
+    
+    try {
+        // Crear FormData
+        const formData = new FormData();
+        formData.append('title', document.getElementById('title').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('category', document.getElementById('category').value);
+        formData.append('price', document.getElementById('price').value);
+        formData.append('stock', document.getElementById('stock').value);
+        formData.append('condition', document.getElementById('condition').value);
+        formData.append('product_type', document.getElementById('product_type').value);
+        formData.append('status', 'available');
+        
+        // Campos opcionales
+        if (document.getElementById('brand').value) 
+            formData.append('brand', document.getElementById('brand').value);
+        if (document.getElementById('color').value) 
+            formData.append('color', document.getElementById('color').value);
+        if (document.getElementById('size').value) 
+            formData.append('size', document.getElementById('size').value);
+        if (document.getElementById('city').value) 
+            formData.append('city', document.getElementById('city').value);
+        if (document.getElementById('state').value) 
+            formData.append('state', document.getElementById('state').value);
+        
+        // Imágenes
+        const images = document.getElementById('images').files;
+        for (let i = 0; i < images.length && i < 5; i++) {
+            formData.append('uploaded_images', images[i]);
+        }
+        
+        // Enviar
+        const response = await fetch('/api/v1/products/', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        
+        if (response.ok) {
+            const product = await response.json();
+            alert('¡Producto publicado exitosamente!');
+            window.location.href = `/products/${product.id}/`;
+        } else {
+            const error = await response.json();
+            alert('Error: ' + JSON.stringify(error));
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Publicar Producto';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al publicar el producto');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Publicar Producto';
+    }
+});
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', loadCategories);
+</script>
+{% endblock %}

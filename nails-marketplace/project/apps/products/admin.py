@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage, Favorite, ProductView, ExchangeRequest
+from .models import Category, Product, ProductImage, ProductView, Cart, CartItem
 
 
 class ProductImageInline(admin.TabularInline):
@@ -7,7 +7,6 @@ class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
     fields = ['image', 'alt_text', 'is_primary', 'order']
-
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -17,7 +16,6 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at']
-
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -31,7 +29,7 @@ class ProductAdmin(admin.ModelAdmin):
         'created_at', 'updated_at'
     ]
     search_fields = ['title', 'description', 'seller__username', 'brand']
-    readonly_fields = ['views', 'favorites_count', 'created_at', 'updated_at']
+    readonly_fields = ['views', 'created_at', 'updated_at']
     
     inlines = [ProductImageInline]
     
@@ -53,10 +51,7 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('city', 'state', 'latitude', 'longitude'),
             'classes': ('collapse',)
         }),
-        ('Métricas', {
-            'fields': ('views', 'favorites_count'),
-            'classes': ('collapse',)
-        }),
+    
         ('Fechas', {
             'fields': ('created_at', 'updated_at', 'expires_at'),
             'classes': ('collapse',)
@@ -84,24 +79,6 @@ class ProductAdmin(admin.ModelAdmin):
     mark_as_inactive.short_description = 'Marcar como inactivos'
 
 
-@admin.register(ProductImage)
-class ProductImageAdmin(admin.ModelAdmin):
-    """Administración de imágenes de productos"""
-    list_display = ['product', 'is_primary', 'order', 'created_at']
-    list_filter = ['is_primary', 'created_at']
-    search_fields = ['product__title', 'alt_text']
-    readonly_fields = ['created_at']
-
-
-@admin.register(Favorite)
-class FavoriteAdmin(admin.ModelAdmin):
-    """Administración de favoritos"""
-    list_display = ['user', 'product', 'created_at']
-    list_filter = ['created_at']
-    search_fields = ['user__username', 'product__title']
-    readonly_fields = ['created_at']
-
-
 @admin.register(ProductView)
 class ProductViewAdmin(admin.ModelAdmin):
     """Administración de visualizaciones"""
@@ -110,33 +87,20 @@ class ProductViewAdmin(admin.ModelAdmin):
     search_fields = ['product__title', 'user__username', 'ip_address']
     readonly_fields = ['viewed_at']
 
-
-@admin.register(ExchangeRequest)
-class ExchangeRequestAdmin(admin.ModelAdmin):
-    """Administración de solicitudes de intercambio"""
-    list_display = [
-        'requester', 'owner', 'offered_product', 
-        'requested_product', 'status', 'created_at'
-    ]
-    list_filter = ['status', 'created_at', 'updated_at']
-    search_fields = [
-        'requester__username', 'owner__username',
-        'offered_product__title', 'requested_product__title'
-    ]
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    """Administración de carritos"""
+    list_display = ['user', 'created_at', 'updated_at', 'get_items_count', 'get_total']
     readonly_fields = ['created_at', 'updated_at']
+    search_fields = ['user__username']
     
-    fieldsets = (
-        ('Usuarios', {
-            'fields': ('requester', 'owner')
-        }),
-        ('Productos', {
-            'fields': ('offered_product', 'requested_product')
-        }),
-        ('Detalles', {
-            'fields': ('message', 'status')
-        }),
-        ('Fechas', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
+    def get_items_count(self, obj):
+        return obj.items.count()
+    get_items_count.short_description = 'Cantidad de items'
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    """Administración de items del carrito"""
+    list_display = ['cart', 'product', 'quantity', 'get_subtotal', 'added_at']
+    readonly_fields = ['added_at']
+    search_fields = ['cart__user__username', 'product__title']

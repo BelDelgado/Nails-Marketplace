@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from apps.users.models import User
 from apps.products.models import Product
-
+from apps.products.models import Category
 
 def home_view(request):
     """Vista para la página de inicio"""
@@ -56,4 +56,31 @@ def profile_edit(request):
     
     return render(request, 'profile/edit.html') 
 
+# Productos
+def categories_view(request):
+    """Vista para mostrar todas las categorías"""
+    categories = Category.objects.filter(is_active=True).prefetch_related('products')
+    return render(request, 'products/categories.html', {
+        'categories': categories
+    })
 
+def products_list_view(request):
+    """Vista de listado de productos"""
+    return render(request, 'products/list.html')
+
+
+def product_detail_view(request, pk):
+    """Vista de detalle de producto"""
+    return render(request, 'products/detail.html', {'product_id': pk})
+
+
+@login_required
+def product_create_view(request):
+    """Vista para crear producto"""
+    return render(request, 'products/create.html')
+
+
+# Carrito
+def cart_view(request):
+    """Vista del carrito de compras"""
+    return render(request, 'cart/index.html')

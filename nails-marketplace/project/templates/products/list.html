@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+
+{% block title %}Productos - Nails Marketplace{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg text-white py-5">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-3">Todos los Productos</h1>
+        <p class="lead">Encuentra los mejores insumos para uñas al mejor precio</p>
+        
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="d-flex justify-content-center mt-3">
+            <ol class="breadcrumb bg-transparent mb-0">
+                
+            </ol>
+        </nav>
+    </div>
+</section>
+
+<!-- Productos Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar Filtros -->
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 sticky-top" style="top: 100px;">
+                    <div class="card-body">
+                        <h5 class="mb-4">
+                            <i class="fas fa-filter me-2"></i>Filtros
+                        </h5>
+                        
+                        <!-- Búsqueda -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Buscar</label>
+                            <input type="text" id="search-input" class="form-control" placeholder="Buscar productos...">
+                        </div>
+                        
+                        <!-- Categoría -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Categoría</label>
+                            <select id="category-filter" class="form-select">
+                                <option value="">Todas las categorías</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Rango de Precio -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Precio (ARS)</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" id="min-price" class="form-control" placeholder="Mínimo">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" id="max-price" class="form-control" placeholder="Máximo">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Condición -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Condición</label>
+                            <select id="condition-filter" class="form-select">
+                                <option value="">Todas</option>
+                                <option value="new">Nuevo</option>
+                                <option value="like_new">Como nuevo</option>
+                                <option value="good">Buen estado</option>
+                                <option value="fair">Estado aceptable</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Ordenar -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Ordenar por</label>
+                            <select id="sort-filter" class="form-select">
+                                <option value="-created_at">Más recientes</option>
+                                <option value="price">Precio: menor a mayor</option>
+                                <option value="-price">Precio: mayor a menor</option>
+                                <option value="-views">Más vistos</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary w-100" onclick="applyFilters()">
+                            <i class="fas fa-search me-2"></i>Aplicar Filtros
+                        </button>
+                        <button class="btn btn-outline-secondary w-100 mt-2" onclick="clearFilters()">
+                            <i class="fas fa-times me-2"></i>Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Productos -->
+            <div class="col-md-9">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="mb-1">Productos</h2>
+                        <div id="products-count" class="text-muted"></div>
+                    </div>
+                    {% if user.is_authenticated %}
+                        <a href="/products/create/" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Nuevo Producto
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Grid de Productos -->
+                <div class="row g-4" id="products-container">
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                        <p class="mt-3 text-muted">Cargando productos...</p>
+                    </div>
+                </div>
+                
+                <!-- Paginación -->
+                <nav id="pagination" class="mt-4"></nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+let currentPage = 1;
+
+// Cargar categorías en el filtro
+async function loadCategoriesFilter() {
+    try {
+        const response = await fetch('/api/v1/categories/');
+        const categories = await response.json();
+        
+        const select = document.getElementById('category-filter');
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            select.appendChild(option);
+        });
+        
+        // Si hay categoría en URL, seleccionarla
+        const urlParams = new URLSearchParams(window.location.search);
+        const categorySlug = urlParams.get('category');
+        if (categorySlug) {
+            const category = categories.find(c => c.slug === categorySlug);
+            if (category) {
+                select.value = category.id;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+// Cargar productos
+async function loadProducts(page = 1) {
+    const container = document.getElementById('products-container');
+    const countDiv = document.getElementById('products-count');
+    
+    container.innerHTML = '<div class="col-12 text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3 text-muted">Cargando...</p></div>';
+    
+    // Construir URL con filtros
+    const params = new URLSearchParams();
+    params.append('page', page);
+    
+    const search = document.getElementById('search-input').value;
+    if (search) params.append('search', search);
+    
+    const category = document.getElementById('category-filter').value;
+    if (category) params.append('category', category);
+    
+    const minPrice = document.getElementById('min-price').value;
+    if (minPrice) params.append('min_price', minPrice);
+    
+    const maxPrice = document.getElementById('max-price').value;
+    if (maxPrice) params.append('max_price', maxPrice);
+    
+    const condition = document.getElementById('condition-filter').value;
+    if (condition) params.append('condition', condition);
+    
+    const sort = document.getElementById('sort-filter').value;
+    if (sort) params.append('ordering', sort);
+    
+    try {
+        const response = await fetch(`/api/v1/products/?${params.toString()}`);
+        const data = await response.json();
+        
+        // Mostrar contador
+        countDiv.textContent = `${data.count || 0} productos encontrados`;
+        
+        if (data.results && data.results.length > 0) {
+            container.innerHTML = data.results.map(product => `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card product-card h-100 border-0 shadow-sm">
+                        <a href="/products/${product.id}/" class="text-decoration-none">
+                            <div class="position-relative" style="height: 220px; overflow: hidden;">
+                                <img src="${product.primary_image || 'https://via.placeholder.com/400x300'}" 
+                                     class="w-100 h-100" 
+                                     alt="${product.title}"
+                                     style="object-fit: cover;">
+                                
+                                <!-- Badge de condición -->
+                                <span class="position-absolute top-0 end-0 m-2 badge bg-success">
+                                    ${getConditionText(product.condition)}
+                                </span>
+                            </div>
+                            
+                            <div class="card-body">
+                                <h6 class="card-title text-dark mb-2" style="min-height: 45px;">
+                                    ${product.title.length > 60 ? product.title.substring(0, 60) + '...' : product.title}
+                                </h6>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-primary">${product.category_name}</span>
+                                    <small class="text-muted">
+                                        <i class="fas fa-eye"></i> ${product.views}
+                                    </small>
+                                </div>
+                                
+                                <p class="text-muted small mb-2">
+                                    <i class="fas fa-user me-1"></i>${product.seller_username}
+                                </p>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="text-primary fw-bold mb-0">
+                                        $${parseFloat(product.price).toLocaleString('es-AR')}
+                                    </h5>
+                                    ${product.city ? `<small class="text-muted"><i class="fas fa-map-marker-alt"></i> ${product.city}</small>` : ''}
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-2"></i>Ver Detalle
+                                    </button>
+                                </div>
+                                
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Renderizar paginación
+            renderPagination(data.count, page);
+        } else {
+            container.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4>No se encontraron productos</h4>
+                    <p class="text-muted">Intenta ajustar los filtros o buscar algo diferente</p>
+                    <a href="/products/" class="btn btn-primary mt-3" onclick="clearFilters(); return false;">
+                        <i class="fas fa-refresh me-2"></i>Ver todos los productos
+                    </a>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
+                <h4>Error al cargar productos</h4>
+                <p class="text-danger">Por favor, intenta nuevamente</p>
+            </div>
+        `;
+    }
+}
+
+// Paginación
+function renderPagination(total, currentPage) {
+    const pageSize = 20;
+    const totalPages = Math.ceil(total / pageSize);
+    
+    if (totalPages <= 1) {
+        document.getElementById('pagination').innerHTML = '';
+        return;
+    }
+    
+    let html = '<ul class="pagination justify-content-center">';
+    
+    // Botón anterior
+    if (currentPage > 1) {
+        html += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="loadProducts(${currentPage - 1}); return false;">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        `;
+    }
+    
+    // Números de página
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            html += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="loadProducts(${i}); return false;">${i}</a>
+                </li>
+            `;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    // Botón siguiente
+    if (currentPage < totalPages) {
+        html += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="loadProducts(${currentPage + 1}); return false;">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        `;
+    }
+    
+    html += '</ul>';
+    document.getElementById('pagination').innerHTML = html;
+}
+
+// Aplicar filtros
+function applyFilters() {
+    currentPage = 1;
+    loadProducts(1);
+}
+
+// Limpiar filtros
+function clearFilters() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('category-filter').value = '';
+    document.getElementById('min-price').value = '';
+    document.getElementById('max-price').value = '';
+    document.getElementById('condition-filter').value = '';
+    document.getElementById('sort-filter').value = '-created_at';
+    currentPage = 1;
+    loadProducts(1);
+}
+
+// Utilidades
+function getConditionText(condition) {
+    const conditions = {
+        'new': 'Nuevo',
+        'like_new': 'Como nuevo',
+        'good': 'Buen estado',
+        'fair': 'Estado aceptable'
+    };
+    return conditions[condition] || condition;
+}
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    loadCategoriesFilter();
+    loadProducts();
+    
+    // Buscar al presionar Enter
+    document.getElementById('search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            applyFilters();
+        }
+    });
+});
+</script>
+
+<style>
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.product-card {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
+}
+
+.product-card img {
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+    transform: scale(1.1);
+}
+
+.sticky-top {
+    z-index: 1020;
+}
+</style>
+{% endblock %}

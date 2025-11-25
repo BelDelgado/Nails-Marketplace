@@ -17,12 +17,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/api/v1/products/">
+                    <a class="nav-link" href="/products/">
                         <i class="fas fa-shopping-bag"></i> Productos
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/api/v1/categories/">
+                    <a class="nav-link" href="/categories/">
                         <i class="fas fa-th-large"></i> Categorías
                     </a>
                 </li>
@@ -42,7 +42,7 @@
             <!-- Usuario logueado o botones de login -->
             {% if user.is_authenticated %}
                 <div class="d-flex align-items-center gap-2">
-                    <!-- Notificaciones (opcional) -->
+                    <!-- Notificaciones -->
                     <button class="btn btn-light position-relative">
                         <i class="fas fa-bell"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -50,7 +50,14 @@
                             <span class="visually-hidden">notificaciones</span>
                         </span>
                     </button>
-                    
+
+                    <!--Carrito -->
+                    <a href="/cart/" class="btn btn-light position-relative">
+                        <i class="fas fa-shopping-cart"></i>
+                            <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                              0
+                         </span>
+                        </a>
                     <!-- Dropdown de Usuario -->
                     <div class="dropdown">
                         <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2" 
@@ -84,11 +91,6 @@
                             <li>
                                 <a class="dropdown-item" href="#">
                                     <i class="fas fa-box me-2"></i>Mis Productos
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-heart me-2"></i>Favoritos
                                 </a>
                             </li>
                             <li>

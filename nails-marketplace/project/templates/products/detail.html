@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.title }} - Nails Marketplace{% endblock %}
+
+{% block content %}
+<!-- Hero Section con info del producto -->
+<section class="gradient-bg text-white py-4">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb bg-transparent mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-white">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'products_list' %}" class="text-white">Productos</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'products_list' %}?category={{ product.category.slug }}" class="text-white">{{ product.category.name }}</a></li>
+                <li class="breadcrumb-item active text-white-50">{{ product.title|truncatechars:50 }}</li>
+            </ol>
+        </nav>
+    </div>
+</section>
+
+<!-- Detalle del Producto -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <!-- Galería de Imágenes -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body p-0">
+                        <!-- Imagen principal -->
+                        <div id="main-image" class="mb-3">
+                                <img src="{{ product.image.url }}" 
+                                     class="img-fluid w-100 rounded" 
+                                     style="height: 450px; object-fit: cover;"
+                                     alt="{{ product.title }}"
+                                     id="main-product-image">
+                          
+                        </div>
+                        
+                        <!-- Miniaturas -->
+                        {% if product.images.all|length > 1 %}
+                        <div class="d-flex gap-2 p-3 overflow-auto">
+                            {% for img in product.images.all %}
+                            <img src="{{ img.image.url }}" 
+                                 class="img-thumbnail thumbnail-img" 
+                                 style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
+                                 onclick="changeMainImage('{{ img.image.url }}')"
+                                 alt="Imagen {{ forloop.counter }}">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Vendedor Info -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="fas fa-store me-2"></i>Vendedor</h6>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center me-3" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <strong class="d-block">{{ product.seller.username }}</strong>
+                                <small class="text-muted">
+                                    Miembro desde {{ product.seller.date_joined|date:"Y" }}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        {% if user.is_authenticated and user != product.seller %}
+                        <a href="mailto:{{ product.seller.email }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-envelope me-2"></i>Contactar Vendedor
+                        </a>
+                        {% elif not user.is_authenticated %}
+                        <a href="{% url 'account_login' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i>Inicia sesión para contactar
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información del Producto -->
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <!-- Título -->
+                    <h1 class="display-6 fw-bold mb-3">{{ product.title }}</h1>
+                    
+                    <!-- Badges -->
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-2">{{ product.category.name }}</span>
+                        <span class="badge bg-success">{{ product.get_condition_display }}</span>
+                        {% if product.product_type == 'exchange' %}
+                        <span class="badge bg-info">Intercambio</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Precio -->
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <h2 class="text-primary fw-bold mb-2">
+                                ${{ product.price|floatformat:2 }} ARS
+                            </h2>
+                            {% if product.stock > 0 %}
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i> Stock disponible: {{ product.stock }}
+                                </small>
+                            {% else %}
+                                <small class="text-danger">
+                                    <i class="fas fa-times-circle"></i> Sin stock
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Acciones -->
+                    {% if user.is_authenticated %}
+                        {% if user == product.seller %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>Este es tu producto
+                        </div>
+                        <div class="d-grid gap-2 mb-4">
+                            <a href="#" class="btn btn-warning btn-lg">
+                                <i class="fas fa-edit me-2"></i>Editar Producto
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="d-grid gap-2 mb-4">
+                            <button onclick="addToCart({{ product.id }})" 
+                                    class="btn btn-primary btn-lg" 
+                                    {% if product.stock == 1 %}disabled{% endif %}>
+                                <i class="fas fa-shopping-cart me-2"></i>Agregar al Carrito
+                            </button>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                    <div class="d-grid gap-2 mb-4">
+                        <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Inicia sesión para comprar
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Detalles -->
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Detalles del Producto</h5>
+                            <table class="table table-borderless mb-0">
+                                {% if product.brand %}
+                                <tr>
+                                    <td class="text-muted" style="width: 40%;"><strong>Marca:</strong></td>
+                                    <td>{{ product.brand }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if product.color %}
+                                <tr>
+                                    <td class="text-muted"><strong>Color:</strong></td>
+                                    <td>{{ product.color }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if product.size %}
+                                <tr>
+                                    <td class="text-muted"><strong>Tamaño/Volumen:</strong></td>
+                                    <td>{{ product.size }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td class="text-muted"><strong>Condición:</strong></td>
+                                    <td>{{ product.get_condition_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Estado:</strong></td>
+                                    <td>
+                                        {% if product.status == 'available' %}
+                                            <span class="badge bg-success">Disponible</span>
+                                        {% elif product.status == 'reserved' %}
+                                            <span class="badge bg-warning">Reservado</span>
+                                        {% elif product.status == 'sold' %}
+                                            <span class="badge bg-secondary">Vendido</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if product.city %}
+                                <tr>
+                                    <td class="text-muted"><strong>Ubicación:</strong></td>
+                                    <td>
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        {{ product.city }}{% if product.state %}, {{ product.state }}{% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Descripción -->
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <h5 class="mb-3"><i class="fas fa-align-left me-2"></i>Descripción</h5>
+                            <p class="text-muted mb-0" style="white-space: pre-line;">{{ product.description }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Estadísticas -->
+                    <div class="d-flex gap-3 text-muted">
+                        <small><i class="fas fa-eye me-1"></i>{{ product.views }} vistas</small>
+                        <small><i class="fas fa-calendar me-1"></i>Publicado {{ product.created_at|date:"d/m/Y" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Productos Similares -->
+        {% if similar_products %}
+        <div class="mt-5">
+            <h3 class="mb-4"><i class="fas fa-boxes me-2"></i>Productos Similares</h3>
+            <div class="row g-4">
+                {% for similar in similar_products %}
+                <div class="col-md-6 col-lg-3">
+                    <div class="card product-card h-100 border-0 shadow-sm">
+                        <a href="{% url 'product_detail' similar.id %}" class="text-decoration-none">
+                            <div class="position-relative" style="height: 180px; overflow: hidden;">
+                                {% if similar.images.all.0 %}
+                                    <img src="{{ similar.images.all.0.image.url }}" 
+                                         class="w-100 h-100" 
+                                         style="object-fit: cover;"
+                                         alt="{{ similar.title }}">
+                                {% else %}
+                                    <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-image fa-3x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title text-dark mb-2" style="min-height: 40px;">
+                                    {{ similar.title|truncatechars:45 }}
+                                </h6>
+                                <h5 class="text-primary fw-bold mb-0">
+                                    ${{ similar.price|floatformat:2 }}
+                                </h5>
+                                <div class="mt-3">
+                                    <span class="btn btn-sm btn-primary w-100">Ver Detalle</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+// Cambiar imagen principal
+function changeMainImage(imageUrl) {
+    const mainImg = document.getElementById('main-product-image');
+    if (mainImg) {
+        mainImg.src = imageUrl;
+    }
+}
+
+// Agregar al carrito
+function addToCart(productId) {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    const existingItem = cart.find(item => item.id === productId);
+    if (existingItem) {
+        existingItem.quantity += 1;
+        showNotification('✅ Cantidad actualizada en el carrito', 'success');
+    } else {
+        cart.push({ id: productId, quantity: 1 });
+        showNotification('✅ Producto agregado al carrito', 'success');
+    }
+    
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartCount();
+}
+
+// Actualizar contador del carrito
+function updateCartCount() {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const badge = document.getElementById('cart-count');
+    if (badge) {
+        badge.textContent = cart.length;
+        badge.style.display = cart.length > 0 ? 'inline' : 'none';
+    }
+}
+
+// Mostrar notificación
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow-lg`;
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close ms-2" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.5s';
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
+}
+
+// Inicializar contador del carrito
+document.addEventListener('DOMContentLoaded', updateCartCount);
+</script>
+
+<style>
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.thumbnail-img {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.thumbnail-img:hover {
+    border-color: #667eea;
+    transform: scale(1.05);
+}
+
+.product-card {
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
+}
+
+.product-card img {
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}

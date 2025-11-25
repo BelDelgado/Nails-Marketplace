@@ -1,14 +1,16 @@
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator
 from django.db.models import Q
 
-from .models import Category, Product, ProductImage, Favorite, ExchangeRequest, ProductView
+from .models import Category, Product, ProductImage, ProductView
 from .serializers import (
     CategorySerializer, ProductListSerializer, ProductDetailSerializer,
-    ProductCreateUpdateSerializer, FavoriteSerializer, ExchangeRequestSerializer,
+    ProductCreateUpdateSerializer,
     ProductImageSerializer
 )
 from .filters import ProductFilter
@@ -61,17 +63,16 @@ class ProductViewSet(viewsets.ModelViewSet):
     - DELETE /api/v1/products/{id}/ - Eliminar producto (solo propietario)
     
     Acciones personalizadas:
-    - POST /api/v1/products/{id}/favorite/ - Agregar/quitar de favoritos
     - GET /api/v1/products/{id}/similar/ - Productos similares
     - GET /api/v1/products/my_products/ - Mis productos
-    - GET /api/v1/products/favorites/ - Mis favoritos
+
     """
     queryset = Product.objects.select_related('seller', 'category').prefetch_related('images')
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ProductFilter
     search_fields = ['title', 'description', 'brand']
-    ordering_fields = ['created_at', 'price', 'views', 'favorites_count']
+    ordering_fields = ['created_at', 'price', 'views']
     ordering = ['-created_at']
     
     def get_serializer_class(self):
@@ -139,50 +140,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = ProductListSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
     
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def favorites(self, request):
-        """Listar productos favoritos del usuario"""
-        favorites = Favorite.objects.filter(user=request.user).select_related('product')
-        products = [fav.product for fav in favorites]
-        
-        page = self.paginate_queryset(products)
-        if page is not None:
-            serializer = ProductListSerializer(page, many=True, context={'request': request})
-            return self.get_paginated_response(serializer.data)
-        
-        serializer = ProductListSerializer(products, many=True, context={'request': request})
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
-    def favorite(self, request, pk=None):
-        """Agregar o quitar de favoritos"""
-        product = self.get_object()
-        
-        # No permitir favoritos propios
-        if product.seller == request.user:
-            return Response(
-                {'error': 'No puedes agregar tus propios productos a favoritos'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        favorite, created = Favorite.objects.get_or_create(
-            user=request.user,
-            product=product
-        )
-        
-        if not created:
-            # Si ya existía, eliminarlo (toggle)
-            favorite.delete()
-            return Response({
-                'message': 'Producto eliminado de favoritos',
-                'is_favorited': False
-            })
-        
-        return Response({
-            'message': 'Producto agregado a favoritos',
-            'is_favorited': True
-        }, status=status.HTTP_201_CREATED)
-    
     @action(detail=True, methods=['get'])
     def similar(self, request, pk=None):
         """Obtener productos similares"""
@@ -208,10 +165,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def featured(self, request):
-        """Productos destacados (más vistos y favoritos)"""
+        """Productos destacados (más vistos)"""
         featured = Product.objects.filter(
             status='available'
-        ).order_by('-favorites_count', '-views')[:10]
+        ).order_by('-views')[:10]
         
         serializer = ProductListSerializer(
             featured,
@@ -254,103 +211,4 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         product = serializer.validated_data['product']
         if product.seller != self.request.user:
             raise PermissionError("No puedes agregar imágenes a productos de otros usuarios")
-        serializer.save()
-
-
-class FavoriteViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para gestionar favoritos
-    
-    Endpoints:
-    - GET /api/v1/favorites/ - Listar favoritos del usuario
-    - POST /api/v1/favorites/ - Agregar a favoritos
-    - DELETE /api/v1/favorites/{id}/ - Quitar de favoritos
-    """
-    serializer_class = FavoriteSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        """Obtener solo favoritos del usuario actual"""
-        return Favorite.objects.filter(user=self.request.user).select_related('product')
-
-
-class ExchangeRequestViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para solicitudes de intercambio
-    
-    Endpoints:
-    - GET /api/v1/exchange-requests/ - Listar solicitudes
-    - POST /api/v1/exchange-requests/ - Crear solicitud
-    - GET /api/v1/exchange-requests/{id}/ - Detalle
-    - PATCH /api/v1/exchange-requests/{id}/ - Actualizar estado
-    - GET /api/v1/exchange-requests/received/ - Solicitudes recibidas
-    - GET /api/v1/exchange-requests/sent/ - Solicitudes enviadas
-    """
-    serializer_class = ExchangeRequestSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        """Obtener solicitudes enviadas o recibidas por el usuario"""
-        return ExchangeRequest.objects.filter(
-            Q(requester=self.request.user) | Q(owner=self.request.user)
-        ).select_related('requester', 'owner', 'offered_product', 'requested_product')
-    
-    @action(detail=False, methods=['get'])
-    def received(self, request):
-        """Solicitudes recibidas"""
-        requests = self.get_queryset().filter(owner=request.user)
-        
-        page = self.paginate_queryset(requests)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        
-        serializer = self.get_serializer(requests, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
-    def sent(self, request):
-        """Solicitudes enviadas"""
-        requests = self.get_queryset().filter(requester=request.user)
-        
-        page = self.paginate_queryset(requests)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        
-        serializer = self.get_serializer(requests, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated])
-    def accept(self, request, pk=None):
-        """Aceptar solicitud de intercambio"""
-        exchange = self.get_object()
-        
-        if exchange.owner != request.user:
-            return Response(
-                {'error': 'Solo el propietario puede aceptar la solicitud'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        exchange.status = 'accepted'
-        exchange.save()
-        
-        serializer = self.get_serializer(exchange)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated])
-    def reject(self, request, pk=None):
-        """Rechazar solicitud de intercambio"""
-        exchange = self.get_object()
-        
-        if exchange.owner != request.user:
-            return Response(
-                {'error': 'Solo el propietario puede rechazar la solicitud'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        exchange.status = 'rejected'
-        exchange.save()
-        
-        serializer = self.get_serializer(exchange)
-        return Response(serializer.data)
+        serializer.save() 
