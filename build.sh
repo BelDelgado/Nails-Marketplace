@@ -3,8 +3,9 @@
 set -o errexit
 
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r nails-marketplace/project/requirements.txt
 
-python manage.py collectstatic --no-input
-python manage.py migrate
-python manage.py createsuperuser_auto
+PYTHON_EXEC="python nails-marketplace/project/manage.py"
+
+$PYTHON_EXEC collectstatic --no-input
+$PYTHON_EXEC migrate
