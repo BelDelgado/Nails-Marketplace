@@ -151,6 +151,7 @@ else:
         }
     }
     print("✓ Usando SQLite (build/desarrollo)")
+    
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
