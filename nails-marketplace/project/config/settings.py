@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import environ import Env
+from environ import Env, environ
 from datetime import timedelta
 from decouple import config
 import dj_database_url 
