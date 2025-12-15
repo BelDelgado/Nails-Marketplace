@@ -127,28 +127,23 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # ==========================================
-# DATABASE - ACTUALIZADO PARA RENDER
+# DATABASE - Configuración unificada con dj_database_url
 # ==========================================
 
+DATABASE_URL_VALUE = os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')
+
 DATABASES = {
-    'default': env.db(
-        # 1. Intenta leer la variable de entorno 'DATABASE_URL'
-        'DATABASE_URL',
-        # 2. Si 'DATABASE_URL' no está presente o no es válida, usa SQLite local como fallback
-        default='sqlite:///db.sqlite3' 
+    'default': dj_database_url.parse(
+        DATABASE_URL_VALUE, 
+        conn_max_age=600, 
+        conn_health_checks=True
     )
 }
 
-# Configuración adicional para conexión (opcional, env.db lo maneja si se usa dj_database_url)
-DATABASES['default']['CONN_MAX_AGE'] = 600
-DATABASES['default']['CONN_HEALTH_CHECKS'] = True
-
-# Opcional: imprimir qué base de datos se está usando (solo en la terminal)
-if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+if 'ENGINE' in DATABASES['default'] and DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
     print("✓ Usando SQLite local o fallback de Build")
 else:
     print("✓ Usando Base de Datos de Producción (PostgreSQL)")
-
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
