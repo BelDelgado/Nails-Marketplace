@@ -198,6 +198,9 @@ STORAGES = {
     },
 }
 
+# Compatibilidad con cloudinary_storage (usa el setting deprecado)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Media files 
 MEDIA_URL = '/media/'
 
@@ -210,14 +213,13 @@ CLOUDINARY_STORAGE = {
 
 # Configuración de media files
 if not DEBUG:
-    # Producción - usar Cloudinary
     STORAGES["default"] = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'  # Compatibilidad
     MEDIA_ROOT = None
     print("✓ Usando Cloudinary para archivos media")
 else:
-    # Desarrollo - usar carpeta local
     STORAGES["default"] = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     }
