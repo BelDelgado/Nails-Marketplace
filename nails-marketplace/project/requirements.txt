@@ -97,3 +97,4 @@ charset-normalizer==3.4.4
 cryptography==46.0.3
 django-debug-toolbar==4.4.6
 django-extensions==3.2.3
+djangorestframework-simplejwt==5.3.1
