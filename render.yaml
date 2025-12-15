@@ -3,7 +3,7 @@ services:
     name: nails-marketplace
     env: python
     buildCommand: "./build.sh"
-    startCommand: "cd nails-marketplace/project && python manage.py migrate && python manage.py create_superuser_if_none && gunicorn config.wsgi:application"
+    startCommand: "cd nails-marketplace/project && python manage.py migrate && python create_admin.py && gunicorn config.wsgi:application"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
