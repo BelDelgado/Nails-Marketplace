@@ -1,9 +1,16 @@
 """
 Script para crear categorías iniciales en Nails Marketplace
-Ejecutar: python manage.py shell < create_categories.py
-O copiar y pegar en: python manage.py shell
+Ejecutar: python create_categories.py
 """
 
+import os
+import django
+
+# Setup de Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+django.setup()
+
+# Ahora sí podemos importar modelos
 from apps.products.models import Category
 
 # Definición de categorías con emojis para hacerlo más visual
@@ -68,7 +75,6 @@ skipped_count = 0
 
 for cat_data in categories_data:
     try:
-        # Intentar obtener o crear la categoría
         category, created = Category.objects.get_or_create(
             slug=cat_data['slug'],
             defaults={
@@ -81,7 +87,6 @@ for cat_data in categories_data:
             print(f"✅ Creada: {category.name}")
             created_count += 1
         else:
-            # Si ya existe, actualizar descripción por si cambió
             if category.description != cat_data['description']:
                 category.description = cat_data['description']
                 category.save()
