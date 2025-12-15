@@ -131,32 +131,122 @@
         </div>
     </div>
 </section>
-
 <script>
+// ==================== DEBUG ====================
+console.log('=== SCRIPT CARGADO ===');
+
+// Obtener CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+console.log('CSRF Token:', csrftoken ? 'OK' : 'NO ENCONTRADO');
+
 // Cargar categorías
 async function loadCategories() {
+    console.log('=== INICIANDO loadCategories() ===');
+    
     try {
+        console.log('Fetching /api/v1/categories/...');
         const response = await fetch('/api/v1/categories/');
-        const categories = await response.json();
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Datos recibidos:', data);
+        
+        // Manejar respuesta paginada o array directo
+        let categories = [];
+        if (Array.isArray(data)) {
+            categories = data;
+            console.log('Es un array directo');
+        } else if (data.results && Array.isArray(data.results)) {
+            categories = data.results;
+            console.log('Es objeto con results, total:', data.count);
+        }
+        
+        console.log('Categorías a procesar:', categories.length);
         
         const select = document.getElementById('category');
+        console.log('Select element:', select);
+        
+        if (!select) {
+            console.error('❌ NO SE ENCONTRÓ EL SELECT CON ID="category"');
+            alert('ERROR: No se puede cargar las categorías (elemento select no encontrado)');
+            return;
+        }
+        
+        select.innerHTML = '<option value="">Selecciona una categoría</option>';
+        console.log('Select limpiado');
+        
+        if (categories.length === 0) {
+            console.warn('⚠️ No hay categorías disponibles');
+            select.innerHTML = '<option value="">No hay categorías creadas</option>';
+            return;
+        }
+        
+        let contador = 0;
         categories.forEach(cat => {
             const option = document.createElement('option');
             option.value = cat.id;
             option.textContent = cat.name;
             select.appendChild(option);
+            contador++;
+            console.log(`  ${contador}. Agregada: ${cat.name} (ID: ${cat.id})`);
         });
+        
+        console.log(`✅ ${contador} categorías agregadas exitosamente al select`);
+        
     } catch (error) {
-        console.error('Error loading categories:', error);
+        console.error('❌ ERROR en loadCategories:', error);
+        alert('Error al cargar categorías: ' + error.message);
+        
+        const select = document.getElementById('category');
+        if (select) {
+            select.innerHTML = '<option value="">Error al cargar categorías</option>';
+        }
     }
 }
 
 // Preview de imágenes
 document.getElementById('images').addEventListener('change', function(e) {
+    console.log('=== Imágenes seleccionadas ===');
     const preview = document.getElementById('image-preview');
     preview.innerHTML = '';
     
-    Array.from(e.target.files).slice(0, 5).forEach((file, index) => {
+    const files = Array.from(e.target.files);
+    console.log('Total archivos:', files.length);
+    
+    if (files.length > 5) {
+        alert('Máximo 5 imágenes permitidas');
+        this.value = '';
+        return;
+    }
+    
+    files.forEach((file, index) => {
+        console.log(`  Imagen ${index + 1}: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+        
+        if (file.size > 5 * 1024 * 1024) {
+            alert(`La imagen ${file.name} excede 5MB`);
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(event) {
             preview.innerHTML += `
@@ -177,77 +267,140 @@ document.getElementById('images').addEventListener('change', function(e) {
 // Enviar formulario
 document.getElementById('product-form').addEventListener('submit', async function(e) {
     e.preventDefault();
+    console.log('=== ENVIANDO FORMULARIO ===');
     
-    const token = localStorage.getItem('access_token');
-    if (!token) {
+    // Verificar autenticación
+    const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    console.log('Autenticado:', isAuthenticated);
+    
+    if (!isAuthenticated) {
         alert('Debes iniciar sesión para publicar productos');
-        window.location.href = '/accounts/login/';
+        window.location.href = '{% url "account_login" %}?next={% url "product_create" %}';
+        return;
+    }
+    
+    // Validar campos
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const category = document.getElementById('category').value;
+    const price = document.getElementById('price').value;
+    const images = document.getElementById('images').files;
+    
+    console.log('Validando campos...');
+    console.log('  Título:', title);
+    console.log('  Descripción:', description ? description.substring(0, 50) + '...' : '(vacío)');
+    console.log('  Categoría ID:', category);
+    console.log('  Precio:', price);
+    console.log('  Imágenes:', images.length);
+    
+    if (!title || !description || !category || !price) {
+        alert('Por favor completa todos los campos obligatorios (*)');
+        return;
+    }
+    
+    if (images.length === 0) {
+        alert('Debes subir al menos una imagen');
         return;
     }
     
     // Deshabilitar botón
     const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Publicando...';
     
     try {
-        // Crear FormData
+        console.log('Creando FormData...');
         const formData = new FormData();
-        formData.append('title', document.getElementById('title').value);
-        formData.append('description', document.getElementById('description').value);
-        formData.append('category', document.getElementById('category').value);
-        formData.append('price', document.getElementById('price').value);
+        formData.append('title', title);
+        formData.append('description', description);
+        formData.append('category', category);
+        formData.append('price', price);
         formData.append('stock', document.getElementById('stock').value);
         formData.append('condition', document.getElementById('condition').value);
         formData.append('product_type', document.getElementById('product_type').value);
         formData.append('status', 'available');
         
         // Campos opcionales
-        if (document.getElementById('brand').value) 
-            formData.append('brand', document.getElementById('brand').value);
-        if (document.getElementById('color').value) 
-            formData.append('color', document.getElementById('color').value);
-        if (document.getElementById('size').value) 
-            formData.append('size', document.getElementById('size').value);
-        if (document.getElementById('city').value) 
-            formData.append('city', document.getElementById('city').value);
-        if (document.getElementById('state').value) 
-            formData.append('state', document.getElementById('state').value);
+        const brand = document.getElementById('brand').value.trim();
+        const color = document.getElementById('color').value.trim();
+        const size = document.getElementById('size').value.trim();
+        const city = document.getElementById('city').value.trim();
+        const state = document.getElementById('state').value.trim();
         
-        // Imágenes
-        const images = document.getElementById('images').files;
+        if (brand) formData.append('brand', brand);
+        if (color) formData.append('color', color);
+        if (size) formData.append('size', size);
+        if (city) formData.append('city', city);
+        if (state) formData.append('state', state);
+        
+        // Agregar imágenes
+        console.log('Agregando imágenes al FormData...');
         for (let i = 0; i < images.length && i < 5; i++) {
             formData.append('uploaded_images', images[i]);
+            console.log(`  Imagen ${i + 1}: ${images[i].name}`);
         }
         
-        // Enviar
+        console.log('Enviando POST a /api/v1/products/...');
         const response = await fetch('/api/v1/products/', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`
+                'X-CSRFToken': csrftoken,
             },
+            credentials: 'same-origin',
             body: formData
         });
         
+        console.log('Response status:', response.status);
+        
         if (response.ok) {
             const product = await response.json();
+            console.log('✅ Producto creado:', product);
             alert('¡Producto publicado exitosamente!');
             window.location.href = `/products/${product.id}/`;
         } else {
-            const error = await response.json();
-            alert('Error: ' + JSON.stringify(error));
+            const errorData = await response.json();
+            console.error('❌ Error del servidor:', errorData);
+            
+            let errorMsg = 'Error al publicar el producto:\n\n';
+            for (let field in errorData) {
+                if (Array.isArray(errorData[field])) {
+                    errorMsg += `${field}: ${errorData[field].join(', ')}\n`;
+                } else {
+                    errorMsg += `${field}: ${errorData[field]}\n`;
+                }
+            }
+            alert(errorMsg);
+            
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Publicar Producto';
+            submitBtn.innerHTML = originalText;
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Error al publicar el producto');
+        console.error('❌ ERROR:', error);
+        alert('Error al publicar el producto: ' + error.message);
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Publicar Producto';
+        submitBtn.innerHTML = originalText;
     }
 });
 
 // Inicializar
-document.addEventListener('DOMContentLoaded', loadCategories);
-</script>
+console.log('=== ESPERANDO DOM ===');
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM CARGADO');
+    console.log('Verificando elemento select...');
+    
+    const select = document.getElementById('category');
+    if (select) {
+        console.log('✓ Select encontrado:', select.tagName);
+    } else {
+        console.error('✗ Select NO encontrado');
+    }
+    
+    console.log('Llamando a loadCategories()...');
+    loadCategories();
+    
+    const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    console.log('Estado de autenticación:', isAuthenticated);
+});
+</script>   
 {% endblock %}

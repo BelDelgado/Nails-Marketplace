@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
     <div class="container">
-        <a class="navbar-brand" href="/">
+        <a class="navbar-brand fw-bold" href="/">
             <i class="fas fa-hand-sparkles" style="color: var(--primary);"></i>
             <span style="color: var(--primary);">Nails</span> Marketplace
         </a>
@@ -10,118 +10,170 @@
         </button>
         
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mx-auto">
+            <!-- Barra de búsqueda central -->
+            <form class="d-flex mx-auto my-2 my-lg-0" style="max-width: 500px; width: 100%;" action="{% url 'products_list' %}" method="get" id="navbar-search-form">
+                <div class="input-group">
+                    <input class="form-control" 
+                           type="search" 
+                           name="search" 
+                           placeholder="Buscar productos..." 
+                           id="navbar-search-input">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Menú de navegación -->
+            <ul class="navbar-nav ms-auto align-items-center gap-1">
                 <li class="nav-item">
-                    <a class="nav-link active" href="/">
-                        <i class="fas fa-home"></i> Inicio
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/products/">
+                    <a class="nav-link" href="{% url 'products_list' %}">
                         <i class="fas fa-shopping-bag"></i> Productos
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/categories/">
+                    <a class="nav-link" href="{% url 'categories' %}">
                         <i class="fas fa-th-large"></i> Categorías
                     </a>
                 </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-ellipsis-v"></i> Más
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/admin/"><i class="fas fa-user-shield"></i> Admin</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#about"><i class="fas fa-info-circle"></i> Acerca de</a></li>
-                        <li><a class="dropdown-item" href="#contact"><i class="fas fa-envelope"></i> Contacto</a></li>
-                    </ul>
+                
+                <!-- Separador visual -->
+                <li class="nav-item">
+                    <span class="text-muted mx-2">|</span>
                 </li>
-            </ul>
-            
-            <!-- Usuario logueado o botones de login -->
-            {% if user.is_authenticated %}
-                <div class="d-flex align-items-center gap-2">
-                    <!-- Notificaciones -->
-                    <button class="btn btn-light position-relative">
-                        <i class="fas fa-bell"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            3
-                            <span class="visually-hidden">notificaciones</span>
-                        </span>
-                    </button>
-
-                    <!--Carrito -->
-                    <a href="/cart/" class="btn btn-light position-relative">
-                        <i class="fas fa-shopping-cart"></i>
-                            <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
-                              0
-                         </span>
+                
+                {% if user.is_authenticated %}
+                    <!-- Carrito -->
+                    <li class="nav-item">
+                        <a href="{% url 'cart' %}" class="btn btn-light position-relative">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span id="cart-count" 
+                                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                                  style="display: none;">
+                                0
+                            </span>
                         </a>
-                    <!-- Dropdown de Usuario -->
-                    <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2" 
-                                type="button" 
-                                id="userDropdown" 
-                                data-bs-toggle="dropdown">
+                    </li>
+                    
+                    <!-- Botón de Usuario Simple -->
+                    <li class="nav-item">
+                        <a href="{% url 'profile_dashboard' %}" class="btn btn-primary d-flex align-items-center gap-2">
                             {% if user.profile.avatar %}
-                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle" width="30" height="30" alt="Avatar">
+                                <img src="{{ user.profile.avatar.url }}" 
+                                     class="rounded-circle" 
+                                     width="24" 
+                                     height="24" 
+                                     alt="Avatar"
+                                     style="object-fit: cover;">
                             {% else %}
-                                <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" 
-                                     style="width: 30px; height: 30px;">
-                                    <i class="fas fa-user fa-sm text-white"></i>
-                                </div>
+                                <i class="fas fa-user"></i>
                             {% endif %}
                             <span class="d-none d-md-inline">{{ user.username }}</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow">
-                            <li>
-                                <div class="dropdown-header">
-                                    <strong>{{ user.get_full_name|default:user.username }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ user.email }}</small>
-                                </div>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'profile_dashboard' %}">
-                                    <i class="fas fa-user me-2"></i>Mi Perfil
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-box me-2"></i>Mis Productos
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-shopping-cart me-2"></i>Compras
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'profile_edit' %}">
-                                    <i class="fas fa-cog me-2"></i>Configuración
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="{% url 'account_logout' %}">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            {% else %}
-                <div class="d-flex gap-2">
-                    <a href="{% url 'account_login' %}" class="btn btn-outline-primary">
-                        <i class="fas fa-sign-in-alt"></i> Ingresar
-                    </a>
-                    <a href="{% url 'account_signup' %}" class="btn btn-primary">
-                        <i class="fas fa-user-plus"></i> Registrarse
-                    </a>
-                </div>
-            {% endif %}
+                        </a>
+                    </li>
+                    
+                    <!-- Botón Cerrar Sesión -->
+                    <li class="nav-item">
+                        <a href="{% url 'account_logout' %}" 
+                           class="btn btn-outline-danger"
+                           title="Cerrar sesión">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span class="d-none d-lg-inline ms-1">Salir</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <!-- Botones para usuarios no logueados -->
+                    <li class="nav-item">
+                        <a href="{% url 'account_login' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-sign-in-alt"></i> Ingresar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'account_signup' %}" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Registrarse
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
         </div>
     </div>
+</nav>
+
+<script>
+// Actualizar contador del carrito al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    {% if user.is_authenticated %}
+    updateCartCount();
+    {% endif %}
+});
+
+// Si está en base.html o algún JS global
+async function updateCartCount() {
+    // Solo actualizar si estás en una página con carrito
+    const cartBadge = document.getElementById('cart-count');
+    if (!cartBadge) return;
+    
+    try {
+        // Aquí puedes poner lógica para obtener el count del carrito
+        // Por ahora lo dejamos vacío
+    } catch (error) {
+        console.error('Error updating cart:', error);
+    }
+}
+
+// Manejar búsqueda del navbar
+document.getElementById('navbar-search-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const searchValue = document.getElementById('navbar-search-input').value.trim();
+    
+    // Redirigir a productos y el script de esa página manejará la búsqueda
+    window.location.href = `/products/?search=${encodeURIComponent(searchValue)}`;
+});
+</script>
+
+<style>
+/* Estilos adicionales para el navbar */
+.navbar {
+    z-index: 1030;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+}
+
+.nav-link {
+    transition: color 0.2s, background-color 0.2s;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+}
+
+.nav-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.btn-light {
+    transition: all 0.2s;
+}
+
+.btn-light:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    #navbar-search-form {
+        margin: 1rem 0;
+    }
+    
+    .navbar-nav {
+        gap: 0.5rem !important;
+    }
+}
+</style>
 </nav>

@@ -80,7 +80,7 @@
             <div class="tab-pane fade show active" id="mis-productos">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4>Mis Productos</h4>
-                    <a href="#" class="btn btn-primary">
+                    <a href="/products/create/" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Nuevo Producto
                     </a>
                 </div>
@@ -172,6 +172,7 @@ async function loadMyProducts() {
                             <div class="mt-3">
                                 <a href="/products/${product.id}" class="btn btn-sm btn-primary">Ver</a>
                                 <a href="/products/${product.id}/edit" class="btn btn-sm btn-outline-primary">Editar</a>
+                                <a href="/products/${product.id}/delete/" class="btn btn-sm btn-outline-danger">Eliminar</a>
                             </div>
                         </div>
                     </div>
@@ -182,7 +183,7 @@ async function loadMyProducts() {
                 <div class="col-12 text-center py-5">
                     <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
                     <p class="text-muted">Aún no tienes productos publicados</p>
-                    <a href="#" class="btn btn-primary">Publicar Primer Producto</a>
+                    <a href="/products/create/" class="btn btn-primary">Publicar Primer Producto</a>
                 </div>
             `;
         }
@@ -196,10 +197,6 @@ async function loadMyProducts() {
 document.addEventListener('DOMContentLoaded', function() {
     loadMyProducts();
     
-    // Cargar favoritos cuando se hace click en la tab
-    document.querySelector('[data-bs-toggle="tab"][href="#favoritos"]').addEventListener('click', function() {
-        loadFavorites();
-    });
 });
 </script>
 {% endblock %}

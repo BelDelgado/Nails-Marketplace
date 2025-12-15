@@ -19,11 +19,11 @@
         <div class="row g-4">
             {% for category in categories %}
             <div class="col-md-6 col-lg-4">
-                <a href="{% url 'products_list' %}?category={{ category.slug }}" class="text-decoration-none">
+                <a href="{% url 'category_detail' category.slug %}">
                     <div class="card category-card border-0 shadow-lg h-100 overflow-hidden">
                         <!-- Imagen de categoría -->
                         <div class="position-relative" style="height: 250px; overflow: hidden;">
-                            {% if category.image %}
+                            {% if category.image  %}
                                 <img src="{{ category.image.url }}" 
                                      class="w-100 h-100" 
                                      style="object-fit: cover;"

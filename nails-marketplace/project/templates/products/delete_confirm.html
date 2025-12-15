@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Producto - Nails Marketplace{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <!-- Icono de advertencia -->
+                        <div class="mb-4">
+                            <i class="fas fa-exclamation-triangle fa-5x text-warning"></i>
+                        </div>
+                        
+                        <h2 class="mb-3">¿Eliminar producto?</h2>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Estás a punto de eliminar este producto
+                        </div>
+                        
+                        <!-- Info del producto -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4">
+                                        {% if product.image %}
+                                            <img src="{{ product.image.url }}" 
+                                                 class="img-fluid rounded" 
+                                                 alt="{{ product.title }}">
+                                        {% else %}
+                                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
+                                                 style="height: 100px;">
+                                                <i class="fas fa-image fa-3x text-white"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-8 text-start mt-3 mt-md-0">
+                                        <h5 class="mb-2">{{ product.title }}</h5>
+                                        <p class="text-muted mb-1">
+                                            <strong>Precio:</strong> ${{ product.price }}
+                                        </p>
+                                        <p class="text-muted mb-0">
+                                            <strong>Categoría:</strong> {{ product.category.name }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-muted mb-4">
+                            El producto será marcado como inactivo y ya no será visible para otros usuarios.
+                        </p>
+                        
+                        <!-- Formulario de confirmación -->
+                        <form method="post" class="d-flex gap-2 justify-content-center">
+                            {% csrf_token %}
+                            
+                            <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-trash me-2"></i>Sí, Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

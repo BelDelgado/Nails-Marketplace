@@ -1,26 +1,115 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Carrito de Compras - Nails Marketplace{% endblock %}
 
 {% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg text-white py-4">
+    <div class="container">
+        <h1 class="display-6 fw-bold mb-2">
+            <i class="fas fa-shopping-cart me-2"></i>Mi Carrito
+        </h1>
+        <p class="mb-0">Revisa tus productos antes de finalizar la compra</p>
+    </div>
+</section>
+
 <section class="py-5 bg-light min-vh-100">
     <div class="container">
-        <h2 class="mb-4">
-            <i class="fas fa-shopping-cart me-2"></i>Mi Carrito
-        </h2>
-        
         <div class="row">
             <!-- Items del Carrito -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
-                        <div id="cart-items">
-                            <!-- Loading -->
-                            <div class="text-center py-5">
-                                <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
-                                <p class="mt-3 text-muted">Cargando carrito...</p>
+                        {% if user.is_authenticated %}
+                            {% if items %}
+                            <div id="cart-items">
+                                {% for item in items %}
+                                <div class="cart-item mb-3 p-3 border rounded" id="item-{{ item.id }}">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-2">
+                                            {% if item.product.images.all.0 %}
+                                                <img src="{{ item.product.images.all.0.image.url }}" 
+                                                     class="img-fluid rounded" 
+                                                     style="height: 80px; width: 80px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                     style="height: 80px; width: 80px;">
+                                                    <i class="fas fa-image fa-2x text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="mb-1">
+                                                <a href="{% url 'product_detail' item.product.id %}" class="text-dark text-decoration-none">
+                                                    {{ item.product.title }}
+                                                </a>
+                                            </h6>
+                                            <small class="text-muted">{{ item.product.category.name }}</small>
+                                            {% if item.product.stock < 5 %}
+                                            <br><small class="text-warning">
+                                                <i class="fas fa-exclamation-triangle"></i> 
+                                                Solo quedan {{ item.product.stock }} unidades
+                                            </small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="input-group input-group-sm">
+                                                <button class="btn btn-outline-secondary" 
+                                                        onclick="updateQuantity({{ item.id }}, {{ item.quantity|add:'-1' }})"
+                                                        {% if item.quantity <= 1 %}disabled{% endif %}>
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                                <input type="text" 
+                                                       class="form-control text-center" 
+                                                       value="{{ item.quantity }}" 
+                                                       id="qty-{{ item.id }}"
+                                                       readonly>
+                                                <button class="btn btn-outline-secondary" 
+                                                        onclick="updateQuantity({{ item.id }}, {{ item.quantity|add:'1' }})"
+                                                        {% if item.quantity >= item.product.stock %}disabled{% endif %}>
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2 text-center">
+                                            <strong class="text-primary" id="subtotal-{{ item.id }}">
+                                                ${{ item.get_subtotal|floatformat:2 }}
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted">${{ item.product.price|floatformat:2 }} c/u</small>
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <button onclick="removeFromCart({{ item.id }})" 
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    title="Eliminar producto">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
                             </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+                                <h4>Tu carrito está vacío</h4>
+                                <p class="text-muted">Agrega productos para comenzar a comprar</p>
+                                <a href="{% url 'products_list' %}" class="btn btn-primary mt-3">
+                                    <i class="fas fa-shopping-bag me-2"></i>Ver Productos
+                                </a>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-lock fa-4x text-muted mb-3"></i>
+                            <h4>Inicia sesión para ver tu carrito</h4>
+                            <p class="text-muted">Debes estar registrado para agregar productos al carrito</p>
+                            <a href="{% url 'account_login' %}?next={% url 'cart' %}" class="btn btn-primary mt-3">
+                                <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                            </a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -30,39 +119,48 @@
                 <div class="card border-0 shadow-sm sticky-top" style="top: 100px;">
                     <div class="card-header bg-primary text-white py-3">
                         <h5 class="mb-0">
-                            <i class="fas fa-file-invoice-dollar me-2"></i>Presupuesto
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Resumen del Pedido
                         </h5>
                     </div>
                     <div class="card-body">
+                        {% if user.is_authenticated and items %}
                         <div class="mb-3">
                             <div class="d-flex justify-content-between mb-2">
-                                <span>Subtotal:</span>
-                                <strong id="subtotal">$0.00</strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 text-muted">
-                                <span>IVA (21%):</span>
-                                <span id="iva">$0.00</span>
+                                <span>Subtotal ({{ items.count }} producto{{ items.count|pluralize }}):</span>
+                                <strong id="subtotal-display">${{ total|floatformat:2 }}</strong>
                             </div>
                             <div class="d-flex justify-content-between mb-2 text-muted">
                                 <span>Envío:</span>
-                                <span id="shipping">A calcular</span>
+                                <span>A calcular</span>
                             </div>
                             <hr>
                             <div class="d-flex justify-content-between mb-3">
                                 <strong class="fs-5">Total ARS:</strong>
-                                <strong class="fs-4 text-primary" id="total">$0.00</strong>
+                                <strong class="fs-4 text-primary" id="total-display">
+                                    {% widthratio total 1 1.21 as total_con_iva %}
+                                    ${{ total_con_iva|floatformat:2 }}
+                                </strong>
                             </div>
                         </div>
                         
-                        <div class="alert alert-info small">
+                        <div class="alert alert-info small mb-3">
                             <i class="fas fa-info-circle me-2"></i>
                             El precio incluye IVA. El envío se calculará al finalizar la compra.
                         </div>
                         
-                        <button onclick="proceedToCheckout()" class="btn btn-primary w-100 btn-lg mb-2" id="checkout-btn">
+                        <button onclick="proceedToCheckout()" class="btn btn-primary w-100 btn-lg mb-2">
                             <i class="fas fa-credit-card me-2"></i>Proceder al Pago
                         </button>
-                        <a href="/products/" class="btn btn-outline-secondary w-100">
+                        {% else %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-3">
+                                <strong class="fs-5">Total:</strong>
+                                <strong class="fs-4 text-primary">$0.00</strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <a href="{% url 'products_list' %}" class="btn btn-outline-secondary w-100">
                             <i class="fas fa-arrow-left me-2"></i>Seguir Comprando
                         </a>
                     </div>
@@ -73,188 +171,151 @@
 </section>
 
 <script>
-let cartProducts = [];
-
-// Cargar carrito
-async function loadCart() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    
-    if (cart.length === 0) {
-        document.getElementById('cart-items').innerHTML = `
-            <div class="text-center py-5">
-                <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
-                <h4>Tu carrito está vacío</h4>
-                <p class="text-muted">Agrega productos para comenzar a comprar</p>
-                <a href="/products/" class="btn btn-primary mt-3">
-                    <i class="fas fa-shopping-bag me-2"></i>Ver Productos
-                </a>
-            </div>
-        `;
-        updateTotals();
-        return;
+// CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
-    
-    // Obtener detalles de los productos
-    try {
-        const productPromises = cart.map(item => 
-            fetch(`/api/v1/products/${item.id}/`).then(r => r.json())
-        );
-        
-        cartProducts = await Promise.all(productPromises);
-        
-        // Combinar con cantidades
-        cartProducts = cartProducts.map((product, index) => ({
-            ...product,
-            cartQuantity: cart[index].quantity
-        }));
-        
-        renderCart();
-        updateTotals();
-        
-    } catch (error) {
-        console.error('Error loading cart:', error);
-        document.getElementById('cart-items').innerHTML = `
-            <div class="text-center py-5 text-danger">
-                <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
-                <p>Error al cargar el carrito</p>
-            </div>
-        `;
-    }
+    return cookieValue;
 }
 
-// Renderizar carrito
-function renderCart() {
-    const container = document.getElementById('cart-items');
-    
-    container.innerHTML = cartProducts.map((product, index) => `
-        <div class="cart-item mb-3 p-3 border rounded">
-            <div class="row align-items-center">
-                <div class="col-md-2">
-                    <img src="${product.primary_image || 'https://via.placeholder.com/150'}" 
-                         class="img-fluid rounded" 
-                         style="height: 80px; object-fit: cover;">
-                </div>
-                <div class="col-md-4">
-                    <h6 class="mb-1">${product.title}</h6>
-                    <small class="text-muted">${product.category.name}</small>
-                </div>
-                <div class="col-md-2">
-                    <div class="input-group input-group-sm">
-                        <button class="btn btn-outline-secondary" onclick="updateQuantity(${product.id}, ${product.cartQuantity - 1})">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <input type="text" class="form-control text-center" value="${product.cartQuantity}" readonly>
-                        <button class="btn btn-outline-secondary" onclick="updateQuantity(${product.id}, ${product.cartQuantity + 1})">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="col-md-2 text-center">
-                    <strong class="text-primary">
-                        $${(parseFloat(product.price) * product.cartQuantity).toLocaleString('es-AR', {minimumFractionDigits: 2})}
-                    </strong>
-                    <br>
-                    <small class="text-muted">$${parseFloat(product.price).toLocaleString('es-AR')} c/u</small>
-                </div>
-                <div class="col-md-2 text-end">
-                    <button onclick="removeFromCart(${product.id})" class="btn btn-sm btn-outline-danger">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
+const csrftoken = getCookie('csrftoken');
 
 // Actualizar cantidad
-function updateQuantity(productId, newQuantity) {
+function updateQuantity(itemId, newQuantity) {
     if (newQuantity < 1) {
-        removeFromCart(productId);
+        removeFromCart(itemId);
         return;
     }
     
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const item = cart.find(i => i.id === productId);
+    const formData = new FormData();
+    formData.append('quantity', newQuantity);
     
-    if (item) {
-        item.quantity = newQuantity;
-        localStorage.setItem('cart', JSON.stringify(cart));
-        loadCart();
-    }
+    fetch(`/cart/update/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar subtotal del item
+            document.getElementById(`subtotal-${itemId}`).textContent = 
+                `$${parseFloat(data.subtotal).toFixed(2)}`;
+            
+            // Actualizar input de cantidad
+            document.getElementById(`qty-${itemId}`).value = newQuantity;
+            
+            // Actualizar totales
+            updateTotals(data.cart_total);
+            
+            showNotification('Cantidad actualizada', 'success');
+        } else {
+            showNotification(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al actualizar cantidad', 'danger');
+    });
 }
 
 // Eliminar del carrito
-function removeFromCart(productId) {
-    if (confirm('¿Eliminar este producto del carrito?')) {
-        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        cart = cart.filter(item => item.id !== productId);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        loadCart();
-        updateCartCount();
+function removeFromCart(itemId) {
+    if (!confirm('¿Eliminar este producto del carrito?')) {
+        return;
     }
+    
+    fetch(`/cart/remove/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remover elemento del DOM con animación
+            const itemElement = document.getElementById(`item-${itemId}`);
+            itemElement.style.opacity = '0';
+            itemElement.style.transition = 'opacity 0.3s';
+            
+            setTimeout(() => {
+                // Si no quedan items, recargar página
+                if (data.cart_count === 0) {
+                    location.reload();
+                } else {
+                    itemElement.remove();
+                    updateTotals(data.cart_total);
+                }
+            }, 300);
+            
+            showNotification('Producto eliminado del carrito', 'success');
+        } else {
+            showNotification(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al eliminar producto', 'danger');
+    });
 }
 
-// Actualizar totales
-function updateTotals() {
-    const subtotal = cartProducts.reduce((sum, product) => 
-        sum + (parseFloat(product.price) * product.cartQuantity), 0
-    );
-    
-    const iva = subtotal * 0.10; // 10% IVA
+// Actualizar totales dinámicamente
+function updateTotals(subtotal) {
+    const iva = subtotal * 0.21;
     const total = subtotal + iva;
     
-    document.getElementById('subtotal').textContent = 
-        `$${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 2})} ARS`;
-    
-    document.getElementById('iva').textContent = 
-        `$${iva.toLocaleString('es-AR', {minimumFractionDigits: 2})} ARS`;
-    
-    document.getElementById('total').textContent = 
-        `$${total.toLocaleString('es-AR', {minimumFractionDigits: 2})} ARS`;
-    
-    // Deshabilitar checkout si el carrito está vacío
-    const checkoutBtn = document.getElementById('checkout-btn');
-    if (checkoutBtn) {
-        checkoutBtn.disabled = cartProducts.length === 0;
-    }
+    document.getElementById('subtotal-display').textContent = 
+        `$${parseFloat(subtotal).toFixed(2)}`;
+    document.getElementById('iva-display').textContent = 
+        `$${parseFloat(iva).toFixed(2)}`;
+    document.getElementById('total-display').textContent = 
+        `$${parseFloat(total).toFixed(2)}`;
 }
 
 // Proceder al checkout
 function proceedToCheckout() {
-    if (cartProducts.length === 0) {
-        alert('Tu carrito está vacío');
-        return;
-    }
-    
-    // Verificar login
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-        alert('Debes iniciar sesión para continuar');
-        window.location.href = '/accounts/login/?next=/cart/';
-        return;
-    }
-    
-    // Aquí iría la integración con MercadoPago
-    alert('Funcionalidad de pago en desarrollo. Integración con MercadoPago próximamente.');
+    showNotification('Funcionalidad de pago en desarrollo. Integración con MercadoPago próximamente.', 'info');
 }
 
-// Actualizar contador del navbar
-function updateCartCount() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const badge = document.getElementById('cart-count');
-    if (badge) {
-        badge.textContent = cart.length;
-    }
+// Mostrar notificación
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow-lg`;
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close ms-2" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.5s';
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
 }
-
-// Inicializar
-document.addEventListener('DOMContentLoaded', function() {
-    loadCart();
-    updateCartCount();
-});
 </script>
 
 <style>
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
 .cart-item {
     transition: all 0.3s ease;
 }

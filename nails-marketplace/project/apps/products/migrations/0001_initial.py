@@ -45,18 +45,7 @@ class Migration(migrations.Migration):
                 'ordering': ['-created_at'],
             },
         ),
-        migrations.CreateModel(
-            name='Favorite',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-            ],
-            options={
-                'verbose_name': 'Favorito',
-                'verbose_name_plural': 'Favoritos',
-                'ordering': ['-created_at'],
-            },
-        ),
+
         migrations.CreateModel(
             name='Product',
             fields=[
@@ -76,7 +65,6 @@ class Migration(migrations.Migration):
                 ('latitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True)),
                 ('longitude', models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True)),
                 ('views', models.IntegerField(default=0, verbose_name='Visualizaciones')),
-                ('favorites_count', models.IntegerField(default=0, verbose_name='Favoritos')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de publicación')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Última actualización')),
                 ('expires_at', models.DateTimeField(blank=True, null=True, verbose_name='Fecha de vencimiento')),

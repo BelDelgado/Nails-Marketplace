@@ -26,11 +26,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='exchange_requests_sent', to=settings.AUTH_USER_MODEL, verbose_name='Solicitante'),
         ),
         migrations.AddField(
-            model_name='favorite',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='favorites', to=settings.AUTH_USER_MODEL, verbose_name='Usuario'),
-        ),
-        migrations.AddField(
             model_name='product',
             name='category',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='products', to='products.category', verbose_name='Categoría'),
@@ -39,11 +34,6 @@ class Migration(migrations.Migration):
             model_name='product',
             name='seller',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='products', to=settings.AUTH_USER_MODEL, verbose_name='Vendedor'),
-        ),
-        migrations.AddField(
-            model_name='favorite',
-            name='product',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='favorited_by', to='products.product', verbose_name='Producto'),
         ),
         migrations.AddField(
             model_name='exchangerequest',
@@ -82,8 +72,5 @@ class Migration(migrations.Migration):
             model_name='product',
             index=models.Index(fields=['seller', 'status'], name='products_pr_seller__2449b8_idx'),
         ),
-        migrations.AlterUniqueTogether(
-            name='favorite',
-            unique_together={('user', 'product')},
-        ),
+       
     ]

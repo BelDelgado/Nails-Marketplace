@@ -12,7 +12,8 @@
             <ol class="breadcrumb bg-transparent mb-0">
                 <li class="breadcrumb-item"><a href="/" class="text-white">Inicio</a></li>
                 <li class="breadcrumb-item"><a href="{% url 'products_list' %}" class="text-white">Productos</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'products_list' %}?category={{ product.category.slug }}" class="text-white">{{ product.category.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'products_list' %}?category={{ product.category.slug }}"
+                        class="text-white">{{ product.category.name }}</a></li>
                 <li class="breadcrumb-item active text-white-50">{{ product.title|truncatechars:50 }}</li>
             </ol>
         </nav>
@@ -29,36 +30,42 @@
                     <div class="card-body p-0">
                         <!-- Imagen principal -->
                         <div id="main-image" class="mb-3">
-                                <img src="{{ product.image.url }}" 
-                                     class="img-fluid w-100 rounded" 
-                                     style="height: 450px; object-fit: cover;"
+                            {% if product.images.all.0 %}
+                                <img src="{{ product.images.all.0.image.url }}" 
+                                     class="img-fluid w-100 rounded"
+                                     style="height: 450px; object-fit: cover;" 
                                      alt="{{ product.title }}"
                                      id="main-product-image">
-                          
+                            {% else %}
+                                <div class="w-100 bg-light d-flex align-items-center justify-content-center rounded" 
+                                     style="height: 450px;">
+                                    <i class="fas fa-image fa-5x text-muted"></i>
+                                </div>
+                            {% endif %}
                         </div>
-                        
+
                         <!-- Miniaturas -->
                         {% if product.images.all|length > 1 %}
                         <div class="d-flex gap-2 p-3 overflow-auto">
                             {% for img in product.images.all %}
                             <img src="{{ img.image.url }}" 
-                                 class="img-thumbnail thumbnail-img" 
+                                 class="img-thumbnail thumbnail-img"
                                  style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
-                                 onclick="changeMainImage('{{ img.image.url }}')"
+                                 onclick="changeMainImage('{{ img.image.url }}')" 
                                  alt="Imagen {{ forloop.counter }}">
                             {% endfor %}
                         </div>
                         {% endif %}
                     </div>
                 </div>
-                
+
                 <!-- Vendedor Info -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <h6 class="mb-3"><i class="fas fa-store me-2"></i>Vendedor</h6>
                         <div class="d-flex align-items-center mb-3">
-                            <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center me-3" 
-                                 style="width: 50px; height: 50px;">
+                            <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center me-3"
+                                style="width: 50px; height: 50px;">
                                 <i class="fas fa-user text-white"></i>
                             </div>
                             <div>
@@ -68,9 +75,9 @@
                                 </small>
                             </div>
                         </div>
-                        
+
                         {% if user.is_authenticated and user != product.seller %}
-                        <a href="mailto:{{ product.seller.email }}" class="btn btn-outline-primary w-100">
+                        <a  class="btn btn-outline-primary w-100">
                             <i class="fas fa-envelope me-2"></i>Contactar Vendedor
                         </a>
                         {% elif not user.is_authenticated %}
@@ -81,13 +88,13 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Información del Producto -->
             <div class="col-md-6">
                 <div class="mb-4">
                     <!-- Título -->
                     <h1 class="display-6 fw-bold mb-3">{{ product.title }}</h1>
-                    
+
                     <!-- Badges -->
                     <div class="mb-3">
                         <span class="badge bg-primary me-2">{{ product.category.name }}</span>
@@ -96,7 +103,7 @@
                         <span class="badge bg-info">Intercambio</span>
                         {% endif %}
                     </div>
-                    
+
                     <!-- Precio -->
                     <div class="card bg-light border-0 mb-4">
                         <div class="card-body">
@@ -104,17 +111,17 @@
                                 ${{ product.price|floatformat:2 }} ARS
                             </h2>
                             {% if product.stock > 0 %}
-                                <small class="text-success">
-                                    <i class="fas fa-check-circle"></i> Stock disponible: {{ product.stock }}
-                                </small>
+                            <small class="text-success">
+                                <i class="fas fa-check-circle"></i> Stock disponible: {{ product.stock }}
+                            </small>
                             {% else %}
-                                <small class="text-danger">
-                                    <i class="fas fa-times-circle"></i> Sin stock
-                                </small>
+                            <small class="text-danger">
+                                <i class="fas fa-times-circle"></i> Sin stock
+                            </small>
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <!-- Acciones -->
                     {% if user.is_authenticated %}
                         {% if user == product.seller %}
@@ -122,16 +129,18 @@
                             <i class="fas fa-info-circle me-2"></i>Este es tu producto
                         </div>
                         <div class="d-grid gap-2 mb-4">
-                            <a href="#" class="btn btn-warning btn-lg">
-                                <i class="fas fa-edit me-2"></i>Editar Producto
-                            </a>
+                            <a href="{% url 'product_edit' product.id %}" class="btn btn-warning btn-lg">
+                            <i class="fas fa-edit me-2"></i>Editar Producto
+                        </a>
                         </div>
                         {% else %}
                         <div class="d-grid gap-2 mb-4">
                             <button onclick="addToCart({{ product.id }})" 
-                                    class="btn btn-primary btn-lg" 
-                                    {% if product.stock == 1 %}disabled{% endif %}>
-                                <i class="fas fa-shopping-cart me-2"></i>Agregar al Carrito
+                                    class="btn btn-primary btn-lg"
+                                    id="add-to-cart-btn" 
+                                    {% if product.stock == 0 %}disabled{% endif %}>
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                <span id="cart-btn-text">Agregar al Carrito</span>
                             </button>
                         </div>
                         {% endif %}
@@ -142,7 +151,7 @@
                         </a>
                     </div>
                     {% endif %}
-                    
+
                     <!-- Detalles -->
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-body">
@@ -174,11 +183,11 @@
                                     <td class="text-muted"><strong>Estado:</strong></td>
                                     <td>
                                         {% if product.status == 'available' %}
-                                            <span class="badge bg-success">Disponible</span>
+                                        <span class="badge bg-success">Disponible</span>
                                         {% elif product.status == 'reserved' %}
-                                            <span class="badge bg-warning">Reservado</span>
+                                        <span class="badge bg-warning">Reservado</span>
                                         {% elif product.status == 'sold' %}
-                                            <span class="badge bg-secondary">Vendido</span>
+                                        <span class="badge bg-secondary">Vendido</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -194,7 +203,7 @@
                             </table>
                         </div>
                     </div>
-                    
+
                     <!-- Descripción -->
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-body">
@@ -202,7 +211,7 @@
                             <p class="text-muted mb-0" style="white-space: pre-line;">{{ product.description }}</p>
                         </div>
                     </div>
-                    
+
                     <!-- Estadísticas -->
                     <div class="d-flex gap-3 text-muted">
                         <small><i class="fas fa-eye me-1"></i>{{ product.views }} vistas</small>
@@ -211,7 +220,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Productos Similares -->
         {% if similar_products %}
         <div class="mt-5">
@@ -223,14 +232,14 @@
                         <a href="{% url 'product_detail' similar.id %}" class="text-decoration-none">
                             <div class="position-relative" style="height: 180px; overflow: hidden;">
                                 {% if similar.images.all.0 %}
-                                    <img src="{{ similar.images.all.0.image.url }}" 
-                                         class="w-100 h-100" 
-                                         style="object-fit: cover;"
-                                         alt="{{ similar.title }}">
+                                <img src="{{ similar.images.all.0.image.url }}" 
+                                     class="w-100 h-100"
+                                     style="object-fit: cover;" 
+                                     alt="{{ similar.title }}">
                                 {% else %}
-                                    <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
-                                        <i class="fas fa-image fa-3x text-muted"></i>
-                                    </div>
+                                <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
                                 {% endif %}
                             </div>
                             <div class="card-body">
@@ -255,6 +264,22 @@
 </section>
 
 <script>
+// Obtener CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 // Cambiar imagen principal
 function changeMainImage(imageUrl) {
     const mainImg = document.getElementById('main-product-image');
@@ -265,29 +290,50 @@ function changeMainImage(imageUrl) {
 
 // Agregar al carrito
 function addToCart(productId) {
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
     
-    const existingItem = cart.find(item => item.id === productId);
-    if (existingItem) {
-        existingItem.quantity += 1;
-        showNotification('✅ Cantidad actualizada en el carrito', 'success');
-    } else {
-        cart.push({ id: productId, quantity: 1 });
-        showNotification('✅ Producto agregado al carrito', 'success');
+    if (!isAuthenticated) {
+        window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+        return;
     }
     
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartCount();
-}
-
-// Actualizar contador del carrito
-function updateCartCount() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const badge = document.getElementById('cart-count');
-    if (badge) {
-        badge.textContent = cart.length;
-        badge.style.display = cart.length > 0 ? 'inline' : 'none';
-    }
+    // Usuario autenticado - agregar al carrito
+    const button = document.getElementById('add-to-cart-btn');
+    const buttonText = document.getElementById('cart-btn-text');
+    
+    // Deshabilitar botón mientras se procesa
+    button.disabled = true;
+    buttonText.textContent = 'Agregando...';
+    
+    fetch(`/cart/add/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            buttonText.textContent = '✓ Agregado';
+            setTimeout(() => {
+                buttonText.textContent = 'Agregar al Carrito';
+                button.disabled = false;
+            }, 2000);
+        } else {
+            showNotification(data.message, 'danger');
+            button.disabled = false;
+            buttonText.textContent = 'Agregar al Carrito';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al agregar al carrito', 'danger');
+        button.disabled = false;
+        buttonText.textContent = 'Agregar al Carrito';
+    });
+       
 }
 
 // Mostrar notificación
@@ -310,9 +356,6 @@ function showNotification(message, type = 'success') {
         setTimeout(() => notification.remove(), 500);
     }, 3000);
 }
-
-// Inicializar contador del carrito
-document.addEventListener('DOMContentLoaded', updateCartCount);
 </script>
 
 <style>
@@ -320,7 +363,7 @@ document.addEventListener('DOMContentLoaded', updateCartCount);
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.breadcrumb-item + .breadcrumb-item::before {
+.breadcrumb-item+.breadcrumb-item::before {
     color: rgba(255, 255, 255, 0.5);
 }
 
@@ -340,7 +383,7 @@ document.addEventListener('DOMContentLoaded', updateCartCount);
 
 .product-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2) !important;
 }
 
 .product-card img {

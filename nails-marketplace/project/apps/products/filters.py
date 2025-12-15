@@ -1,6 +1,6 @@
 import django_filters
 from django.db import models
-from .models import Product
+from .models import Product, Category  # ← Agregar Category aquí
 
 
 class ProductFilter(django_filters.FilterSet):
@@ -41,13 +41,13 @@ class ProductFilter(django_filters.FilterSet):
             ('created_at', 'created_at'),
             ('price', 'price'),
             ('views', 'views'),
-            ('favorites_count', 'favorites_count'),
+            ('title', 'title'),  # ← Agregué este para ordenar por nombre
         ),
         field_labels={
             'created_at': 'Fecha de publicación',
             'price': 'Precio',
             'views': 'Visualizaciones',
-            'favorites_count': 'Favoritos',
+            'title': 'Nombre',
         }
     )
     

@@ -12,7 +12,6 @@
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="d-flex justify-content-center mt-3">
             <ol class="breadcrumb bg-transparent mb-0">
-                
             </ol>
         </nav>
     </div>
@@ -49,10 +48,10 @@
                             <label class="form-label fw-semibold">Precio (ARS)</label>
                             <div class="row g-2">
                                 <div class="col-6">
-                                    <input type="number" id="min-price" class="form-control" placeholder="Mínimo">
+                                    <input type="number" id="min-price" class="form-control" placeholder="Mínimo" min="0">
                                 </div>
                                 <div class="col-6">
-                                    <input type="number" id="max-price" class="form-control" placeholder="Máximo">
+                                    <input type="number" id="max-price" class="form-control" placeholder="Máximo" min="0">
                                 </div>
                             </div>
                         </div>
@@ -77,6 +76,7 @@
                                 <option value="price">Precio: menor a mayor</option>
                                 <option value="-price">Precio: mayor a menor</option>
                                 <option value="-views">Más vistos</option>
+                                <option value="title">Nombre A-Z</option>
                             </select>
                         </div>
                         
@@ -96,10 +96,10 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h2 class="mb-1">Productos</h2>
-                        <div id="products-count" class="text-muted"></div>
+                        <div id="products-count" class="text-muted">Cargando...</div>
                     </div>
                     {% if user.is_authenticated %}
-                        <a href="/products/create/" class="btn btn-primary">
+                        <a href="{% url 'product_create' %}" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Nuevo Producto
                         </a>
                     {% endif %}
@@ -122,14 +122,22 @@
 
 <script>
 let currentPage = 1;
+const pageSize = 12;
 
 // Cargar categorías en el filtro
 async function loadCategoriesFilter() {
     try {
         const response = await fetch('/api/v1/categories/');
-        const categories = await response.json();
+        const data = await response.json();
         
         const select = document.getElementById('category-filter');
+        
+        // Limpiar opciones existentes excepto "Todas"
+        select.innerHTML = '<option value="">Todas las categorías</option>';
+        
+        // Si la respuesta es un array
+        const categories = Array.isArray(data) ? data : (data.results || []);
+        
         categories.forEach(cat => {
             const option = document.createElement('option');
             option.value = cat.id;
@@ -139,12 +147,9 @@ async function loadCategoriesFilter() {
         
         // Si hay categoría en URL, seleccionarla
         const urlParams = new URLSearchParams(window.location.search);
-        const categorySlug = urlParams.get('category');
-        if (categorySlug) {
-            const category = categories.find(c => c.slug === categorySlug);
-            if (category) {
-                select.value = category.id;
-            }
+        const categoryId = urlParams.get('category');
+        if (categoryId) {
+            select.value = categoryId;
         }
     } catch (error) {
         console.error('Error loading categories:', error);
@@ -161,8 +166,9 @@ async function loadProducts(page = 1) {
     // Construir URL con filtros
     const params = new URLSearchParams();
     params.append('page', page);
+    params.append('page_size', pageSize);
     
-    const search = document.getElementById('search-input').value;
+    const search = document.getElementById('search-input').value.trim();
     if (search) params.append('search', search);
     
     const category = document.getElementById('category-filter').value;
@@ -180,12 +186,21 @@ async function loadProducts(page = 1) {
     const sort = document.getElementById('sort-filter').value;
     if (sort) params.append('ordering', sort);
     
+    // Siempre filtrar por disponibles
+    params.append('status', 'available');
+    
     try {
         const response = await fetch(`/api/v1/products/?${params.toString()}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         // Mostrar contador
-        countDiv.textContent = `${data.count || 0} productos encontrados`;
+        const count = data.count || 0;
+        countDiv.textContent = `${count} producto${count !== 1 ? 's' : ''} encontrado${count !== 1 ? 's' : ''}`;
         
         if (data.results && data.results.length > 0) {
             container.innerHTML = data.results.map(product => `
@@ -193,10 +208,11 @@ async function loadProducts(page = 1) {
                     <div class="card product-card h-100 border-0 shadow-sm">
                         <a href="/products/${product.id}/" class="text-decoration-none">
                             <div class="position-relative" style="height: 220px; overflow: hidden;">
-                                <img src="${product.primary_image || 'https://via.placeholder.com/400x300'}" 
+                                <img src="${product.primary_image || 'https://via.placeholder.com/400x300?text=Sin+Imagen'}" 
                                      class="w-100 h-100" 
                                      alt="${product.title}"
-                                     style="object-fit: cover;">
+                                     style="object-fit: cover;"
+                                     onerror="this.src='https://via.placeholder.com/400x300?text=Sin+Imagen'">
                                 
                                 <!-- Badge de condición -->
                                 <span class="position-absolute top-0 end-0 m-2 badge bg-success">
@@ -210,29 +226,28 @@ async function loadProducts(page = 1) {
                                 </h6>
                                 
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="badge bg-primary">${product.category_name}</span>
+                                    <span class="badge bg-primary">${product.category_name || 'Sin categoría'}</span>
                                     <small class="text-muted">
-                                        <i class="fas fa-eye"></i> ${product.views}
+                                        <i class="fas fa-eye"></i> ${product.views || 0}
                                     </small>
                                 </div>
                                 
                                 <p class="text-muted small mb-2">
-                                    <i class="fas fa-user me-1"></i>${product.seller_username}
+                                    <i class="fas fa-user me-1"></i>${product.seller_username || 'Vendedor'}
                                 </p>
                                 
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="text-primary fw-bold mb-0">
-                                        $${parseFloat(product.price).toLocaleString('es-AR')}
+                                        $${parseFloat(product.price).toLocaleString('es-AR', {minimumFractionDigits: 2})}
                                     </h5>
                                     ${product.city ? `<small class="text-muted"><i class="fas fa-map-marker-alt"></i> ${product.city}</small>` : ''}
                                 </div>
                                 
                                 <div class="d-grid gap-2">
-                                    <button class="btn btn-primary btn-sm">
+                                    <span class="btn btn-primary btn-sm">
                                         <i class="fas fa-eye me-2"></i>Ver Detalle
-                                    </button>
+                                    </span>
                                 </div>
-                                
                             </div>
                         </a>
                     </div>
@@ -247,11 +262,12 @@ async function loadProducts(page = 1) {
                     <i class="fas fa-search fa-3x text-muted mb-3"></i>
                     <h4>No se encontraron productos</h4>
                     <p class="text-muted">Intenta ajustar los filtros o buscar algo diferente</p>
-                    <a href="/products/" class="btn btn-primary mt-3" onclick="clearFilters(); return false;">
+                    <button class="btn btn-primary mt-3" onclick="clearFilters()">
                         <i class="fas fa-refresh me-2"></i>Ver todos los productos
-                    </a>
+                    </button>
                 </div>
             `;
+            document.getElementById('pagination').innerHTML = '';
         }
     } catch (error) {
         console.error('Error:', error);
@@ -259,15 +275,18 @@ async function loadProducts(page = 1) {
             <div class="col-12 text-center py-5">
                 <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
                 <h4>Error al cargar productos</h4>
-                <p class="text-danger">Por favor, intenta nuevamente</p>
+                <p class="text-danger">${error.message}</p>
+                <button class="btn btn-primary mt-3" onclick="loadProducts(1)">
+                    <i class="fas fa-refresh me-2"></i>Reintentar
+                </button>
             </div>
         `;
+        countDiv.textContent = 'Error al cargar';
     }
 }
 
 // Paginación
-function renderPagination(total, currentPage) {
-    const pageSize = 20;
+function renderPagination(total, currentPageNum) {
     const totalPages = Math.ceil(total / pageSize);
     
     if (totalPages <= 1) {
@@ -278,10 +297,10 @@ function renderPagination(total, currentPage) {
     let html = '<ul class="pagination justify-content-center">';
     
     // Botón anterior
-    if (currentPage > 1) {
+    if (currentPageNum > 1) {
         html += `
             <li class="page-item">
-                <a class="page-link" href="#" onclick="loadProducts(${currentPage - 1}); return false;">
+                <a class="page-link" href="#" onclick="currentPage = ${currentPageNum - 1}; loadProducts(currentPage); return false;">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
@@ -290,22 +309,22 @@ function renderPagination(total, currentPage) {
     
     // Números de página
     for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+        if (i === 1 || i === totalPages || (i >= currentPageNum - 2 && i <= currentPageNum + 2)) {
             html += `
-                <li class="page-item ${i === currentPage ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="loadProducts(${i}); return false;">${i}</a>
+                <li class="page-item ${i === currentPageNum ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="currentPage = ${i}; loadProducts(${i}); return false;">${i}</a>
                 </li>
             `;
-        } else if (i === currentPage - 3 || i === currentPage + 3) {
+        } else if (i === currentPageNum - 3 || i === currentPageNum + 3) {
             html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
         }
     }
     
     // Botón siguiente
-    if (currentPage < totalPages) {
+    if (currentPageNum < totalPages) {
         html += `
             <li class="page-item">
-                <a class="page-link" href="#" onclick="loadProducts(${currentPage + 1}); return false;">
+                <a class="page-link" href="#" onclick="currentPage = ${currentPageNum + 1}; loadProducts(currentPage); return false;">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>
@@ -347,8 +366,31 @@ function getConditionText(condition) {
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', function() {
+    // Cargar categorías
     loadCategoriesFilter();
-    loadProducts();
+    
+    // Verificar si hay parámetro de búsqueda en la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchFromUrl = urlParams.get('search');
+    
+    if (searchFromUrl) {
+        // Poner el valor en el input de búsqueda
+        document.getElementById('search-input').value = searchFromUrl;
+    }
+    
+    // Cargar productos
+    loadProducts(1);
+    
+    // Buscar al presionar Enter
+    document.getElementById('search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            applyFilters();
+        }
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    loadCategoriesFilter();
+    loadProducts(1);
     
     // Buscar al presionar Enter
     document.getElementById('search-input').addEventListener('keypress', function(e) {

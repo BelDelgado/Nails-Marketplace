@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, Cart, CartItem
+from .models import Category, Product, ProductImage
 from apps.users.serializers import UserSerializer
 
 
@@ -39,15 +39,27 @@ class ProductListSerializer(serializers.ModelSerializer):
             'category_name', 'seller_username', 'primary_image', 'city',
             'views', 'created_at'
         ]
-        read_only_fields = ['id', 'views','created_at']
+        read_only_fields = ['id', 'views', 'created_at']
     
     def get_primary_image(self, obj):
         """Obtener imagen principal del producto"""
+        # Primero buscar imagen marcada como principal
         primary_image = obj.images.filter(is_primary=True).first()
+        
         if primary_image:
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(primary_image.image.url)
+            return primary_image.image.url
+        
+        # Si no hay imagen principal, tomar la primera imagen disponible
+        first_image = obj.images.first()
+        if first_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(first_image.image.url)
+            return first_image.image.url
+        
         return None
 
 
@@ -70,7 +82,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'product_type', 'condition', 'status', 'price', 'stock',
             'brand', 'color', 'size', 'city', 'state',
             'latitude', 'longitude', 'views',
-            'images','is_owner',
+            'images', 'is_owner',
             'created_at', 'updated_at', 'expires_at'
         ]
         read_only_fields = [
@@ -143,35 +155,3 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
                 )
         
         return instance
-
-
-# Serializers para el carrito
-class CartItemSerializer(serializers.ModelSerializer):
-    """Serializer para items del carrito"""
-    product = ProductListSerializer(read_only=True)
-    product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(),
-        source='product',
-        write_only=True
-    )
-    subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True, source='get_subtotal')
-    
-    class Meta:
-        model = CartItem
-        fields = ['id', 'product', 'product_id', 'quantity', 'subtotal', 'added_at']
-        read_only_fields = ['id', 'added_at']
-
-
-class CartSerializer(serializers.ModelSerializer):
-    """Serializer para el carrito"""
-    items = CartItemSerializer(many=True, read_only=True)
-    total = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True, source='get_total')
-    items_count = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Cart
-        fields = ['id', 'user', 'items', 'total', 'items_count', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
-    
-    def get_items_count(self, obj):
-        return obj.items.count()

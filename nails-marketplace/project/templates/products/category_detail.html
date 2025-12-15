@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - Nails Marketplace{% endblock %}
+
+{% block content %}
+<!-- Hero Section de Categoría -->
+<section class="gradient-bg text-white py-5">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb bg-transparent mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-white">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'categories' %}" class="text-white">Categorías</a></li>
+                <li class="breadcrumb-item active text-white-50">{{ category.name }}</li>
+            </ol>
+        </nav>
+        
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-{{ category.icon|default:'tag' }} me-3"></i>
+                    {{ category.name }}
+                </h1>
+                {% if category.description %}
+                <p class="lead mb-0">{{ category.description }}</p>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="badge bg-white text-primary fs-5 px-4 py-3">
+                    {{ total_products }} producto{{ total_products|pluralize }}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Productos de la Categoría -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar con Filtros -->
+            <div class="col-lg-3 mb-4">
+                <!-- Búsqueda en categoría -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="fas fa-search me-2"></i>Buscar en {{ category.name }}</h6>
+                        <form method="get" action="">
+                            <div class="input-group">
+                                <input type="text" 
+                                       name="search" 
+                                       class="form-control" 
+                                       placeholder="Buscar productos..."
+                                       value="{{ search_query }}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Ordenar -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="fas fa-sort me-2"></i>Ordenar por</h6>
+                        <select class="form-select" onchange="window.location.href='?order=' + this.value + '{% if search_query %}&search={{ search_query }}{% endif %}'">
+                            <option value="-created_at" {% if request.GET.order == '-created_at' or not request.GET.order %}selected{% endif %}>
+                                Más recientes
+                            </option>
+                            <option value="price" {% if request.GET.order == 'price' %}selected{% endif %}>
+                                Menor precio
+                            </option>
+                            <option value="-price" {% if request.GET.order == '-price' %}selected{% endif %}>
+                                Mayor precio
+                            </option>
+                            <option value="title" {% if request.GET.order == 'title' %}selected{% endif %}>
+                                A-Z
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Otras Categorías -->
+                {% if other_categories %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="fas fa-th-large me-2"></i>Otras Categorías</h6>
+                        <div class="list-group list-group-flush">
+                            {% for cat in other_categories %}
+                            <a href="{% url 'category_detail' cat.slug %}" 
+                               class="list-group-item list-group-item-action border-0 d-flex justify-content-between align-items-center">
+                                {{ cat.name }}
+                                <span class="badge bg-primary rounded-pill">{{ cat.product_count }}</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        <a href="{% url 'categories' %}" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                            Ver todas las categorías
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Grid de Productos -->
+            <div class="col-lg-9">
+                {% if search_query %}
+                <div class="alert alert-info">
+                    <i class="fas fa-search me-2"></i>
+                    Mostrando resultados para "<strong>{{ search_query }}</strong>" en {{ category.name }}
+                    <a href="{% url 'category_detail' category.slug %}" class="alert-link ms-2">Limpiar búsqueda</a>
+                </div>
+                {% endif %}
+                
+                {% if products %}
+                <div class="row g-4">
+                    {% for product in products %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card product-card h-100 border-0 shadow-sm">
+                            <a href="{% url 'product_detail' product.id %}" class="text-decoration-none">
+                                <!-- Imagen del producto -->
+<div class="position-relative" style="height: 250px; overflow: hidden;">
+    {% with primary_image=product.images.all|first %}
+        {% if primary_image %}
+            <img src="{{ primary_image.image.url }}" 
+                 class="w-100 h-100" 
+                 style="object-fit: cover;"
+                 alt="{{ product.title }}">
+        {% else %}
+            <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                <i class="fas fa-image fa-4x text-muted"></i>
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+                                
+                                <!-- Info del producto -->
+                                <div class="card-body">
+                                    <h5 class="card-title text-dark mb-2" style="min-height: 48px;">
+                                        {{ product.title|truncatechars:50 }}
+                                    </h5>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h4 class="text-primary fw-bold mb-0">
+                                            ${{ product.price|floatformat:2 }}
+                                        </h4>
+                                        {% if product.stock > 0 %}
+                                            <small class="text-success">
+                                                <i class="fas fa-check-circle"></i> Stock: {{ product.stock }}
+                                            </small>
+                                        {% else %}
+                                            <small class="text-danger">
+                                                <i class="fas fa-times-circle"></i> Sin stock
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center text-muted small mb-3">
+                                        <span><i class="fas fa-user me-1"></i>{{ product.seller.username }}</span>
+                                        <span><i class="fas fa-eye me-1"></i>{{ product.views }}</span>
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        <span class="btn btn-primary">
+                                            <i class="fas fa-eye me-2"></i>Ver Detalle
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- Sin resultados -->
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-5x text-muted mb-4"></i>
+                    <h3>No hay productos en esta categoría</h3>
+                    {% if search_query %}
+                        <p class="text-muted mb-4">No se encontraron productos que coincidan con tu búsqueda</p>
+                        <a href="{% url 'category_detail' category.slug %}" class="btn btn-primary">
+                            Ver todos los productos de {{ category.name }}
+                        </a>
+                    {% else %}
+                        <p class="text-muted mb-4">Sé el primero en publicar un producto aquí</p>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'product_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Publicar Producto
+                        </a>
+                        {% else %}
+                        <a href="{% url 'account_login' %}" class="btn btn-primary">
+                            Inicia sesión para publicar
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.product-card {
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
+}
+
+.product-card img {
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+    transform: scale(1.1);
+}
+
+.list-group-item {
+    transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    padding-left: 1.5rem !important;
+}
+</style>
+{% endblock %}

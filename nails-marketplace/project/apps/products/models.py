@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator
 from apps.users.models import User
 
 class Category(models.Model):
@@ -10,7 +10,7 @@ class Category(models.Model):
     slug = models.SlugField(max_length=100, unique=True, verbose_name='Slug')
     description = models.TextField(blank=True, verbose_name='Descripción')
     icon = models.CharField(max_length=50, blank=True, verbose_name='Icono (nombre)')
-    image = models.ImageField(upload_to='categories/', blank=True, null=True, verbose_name='Imagen')
+    image  = models.ImageField(upload_to='categories/', blank=True, null=True, verbose_name='Imagen')
     is_active = models.BooleanField(default=True, verbose_name='Activa')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -28,8 +28,10 @@ class Product(models.Model):
     Productos de insumos para uñas
     """
     TYPE_CHOICES = [
-        ('sale', 'Venta'),
-    ]
+    ('sale', 'Venta'),
+    ('exchange', 'Intercambio'),
+    ('both', 'Venta/Intercambio'),
+]
     
     CONDITION_CHOICES = [
         ('new', 'Nuevo'),
@@ -110,23 +112,6 @@ class Product(models.Model):
         """Incrementar contador de vistas"""
         self.views += 1
         self.save(update_fields=['views'])
-
-class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def get_total(self):
-        return sum(item.get_subtotal() for item in self.items.all())
-
-class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
-    added_at = models.DateTimeField(auto_now_add=True)
-
-    def get_subtotal(self):
-        return self.product.price * self.quantity
 
 class ProductImage(models.Model):
     """

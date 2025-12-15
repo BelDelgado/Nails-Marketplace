@@ -1,10 +1,21 @@
-
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import (home_view, profile_dashboard, profile_edit,  categories_view, products_list_view, product_detail_view, product_create_view, cart_view)     
-
+from .views import (home_view, 
+                    profile_dashboard, 
+                    profile_edit, 
+                    categories_view, 
+                    category_detail_view, 
+                    products_list_view,
+                    product_detail_view, 
+                    product_create_view,  
+                    product_edit_view, 
+                    product_delete_view,
+                    cart_view, 
+                    add_to_cart,
+                    remove_from_cart, 
+                    update_cart_quantity)     
 
 urlpatterns = [
     # Home
@@ -22,14 +33,21 @@ urlpatterns = [
     path('profile/edit/', profile_edit, name='profile_edit'),
     
      # Products
-    path('categories/', categories_view, name='categories'),
+    path('categories/',  categories_view, name='categories'),
+    path('category/<slug:slug>/', category_detail_view, name='category_detail'),
     path('products/', products_list_view, name='products_list'),
-    path('products/<int:pk>/', product_detail_view, name='product_detail'),
     path('products/create/', product_create_view, name='product_create'),
-    
+    path('products/<int:pk>/delete/', product_delete_view, name='product_delete'),
+    path('products/<int:pk>/', product_detail_view, name='product_detail'),
+    path('products/<int:pk>/edit/', product_edit_view, name='product_edit'),
+   
+
     # Cart
     path('cart/', cart_view, name='cart'),
-    
+    path('cart/add/<int:product_id>/', add_to_cart, name='add_to_cart'),
+    path('cart/remove/<int:item_id>/', remove_from_cart, name='remove_from_cart'),
+    path('cart/update/<int:item_id>/', update_cart_quantity, name='update_cart_quantity'),
+     
     # API v1
     path('api/v1/users/', include('apps.users.urls')),
     path('api/v1/', include('apps.products.urls'))

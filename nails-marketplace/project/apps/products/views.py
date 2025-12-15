@@ -3,10 +3,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import render, get_object_or_404
-from django.core.paginator import Paginator
-from django.db.models import Q
-
 from .models import Category, Product, ProductImage, ProductView
 from .serializers import (
     CategorySerializer, ProductListSerializer, ProductDetailSerializer,
@@ -49,6 +45,8 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
         
         serializer = ProductListSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
+
+
 
 
 class ProductViewSet(viewsets.ModelViewSet):

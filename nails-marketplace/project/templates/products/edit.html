@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar {{ product.title }} - Nails Marketplace{% endblock %}
+
+{% block content %}
+<section class="gradient-bg text-white py-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-white">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'products_list' %}" class="text-white">Productos</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}" class="text-white">{{ product.title|truncatechars:30 }}</a></li>
+                <li class="breadcrumb-item active text-white-50">Editar</li>
+            </ol>
+        </nav>
+        <h1 class="display-6 fw-bold mt-3">
+            <i class="fas fa-edit me-2"></i>Editar Producto
+        </h1>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <form id="edit-product-form">
+                            {% csrf_token %}
+                            
+                            <!-- Título -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    Título del producto <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="title" 
+                                       name="title" 
+                                       value="{{ product.title }}"
+                                       required 
+                                       maxlength="200">
+                            </div>
+                            
+                            <!-- Descripción -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    Descripción <span class="text-danger">*</span>
+                                </label>
+                                <textarea class="form-control" 
+                                          id="description" 
+                                          name="description" 
+                                          rows="5" 
+                                          required>{{ product.description }}</textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Categoría -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        Categoría <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat.id }}" {% if cat.id == product.category.id %}selected{% endif %}>
+                                            {{ cat.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <!-- Precio -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        Precio (ARS) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="price" 
+                                           name="price" 
+                                           value="{{ product.price }}"
+                                           min="0" 
+                                           step="0.01" 
+                                           required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Stock -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        Stock <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="stock" 
+                                           name="stock" 
+                                           value="{{ product.stock }}"
+                                           min="0" 
+                                           required>
+                                </div>
+                                
+                                <!-- Condición -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        Condición <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="condition" name="condition" required>
+                                        <option value="new" {% if product.condition == 'new' %}selected{% endif %}>Nuevo</option>
+                                        <option value="like_new" {% if product.condition == 'like_new' %}selected{% endif %}>Como nuevo</option>
+                                        <option value="good" {% if product.condition == 'good' %}selected{% endif %}>Buen estado</option>
+                                        <option value="fair" {% if product.condition == 'fair' %}selected{% endif %}>Estado aceptable</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Estado -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        Estado <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="available" {% if product.status == 'available' %}selected{% endif %}>Disponible</option>
+                                        <option value="reserved" {% if product.status == 'reserved' %}selected{% endif %}>Reservado</option>
+                                        <option value="sold" {% if product.status == 'sold' %}selected{% endif %}>Vendido</option>
+                                        <option value="inactive" {% if product.status == 'inactive' %}selected{% endif %}>Inactivo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Marca -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">Marca</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="brand" 
+                                           name="brand" 
+                                           value="{{ product.brand|default:'' }}">
+                                </div>
+                                
+                                <!-- Color -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">Color</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="color" 
+                                           name="color" 
+                                           value="{{ product.color|default:'' }}">
+                                </div>
+                                
+                                <!-- Tamaño -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">Tamaño/Volumen</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="size" 
+                                           name="size" 
+                                           value="{{ product.size|default:'' }}"
+                                           placeholder="ej: 15ml, 50g">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Ciudad -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Ciudad</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="city" 
+                                           name="city" 
+                                           value="{{ product.city|default:'' }}">
+                                </div>
+                                
+                                <!-- Provincia -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Provincia</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="state" 
+                                           name="state" 
+                                           value="{{ product.state|default:'' }}">
+                                </div>
+                            </div>
+                            
+                            <!-- Botones -->
+                            <div class="d-flex gap-2 justify-content-end mt-4">
+                                <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary" id="submit-btn">
+                                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Imágenes actuales -->
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-images me-2"></i>Imágenes del producto
+                        </h5>
+                        <div class="row g-3">
+                            {% if product.image %}
+                            <div class="col-md-3">
+                                <div class="position-relative">
+                                    <img src="{{ product.image.url }}" 
+                                         class="img-fluid rounded" 
+                                         alt="Imagen principal">
+                                    <span class="badge bg-primary position-absolute top-0 start-0 m-2">
+                                        Principal
+                                    </span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% for img in product.images.all %}
+                            <div class="col-md-3">
+                                <img src="{{ img.image.url }}" 
+                                     class="img-fluid rounded" 
+                                     alt="{{ img.alt_text }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <p class="text-muted small mt-3 mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Para cambiar las imágenes, contacta al administrador.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.getElementById('edit-product-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submit-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+    
+    const formData = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        category: document.getElementById('category').value,
+        price: document.getElementById('price').value,
+        stock: document.getElementById('stock').value,
+        condition: document.getElementById('condition').value,
+        status: document.getElementById('status').value,
+        brand: document.getElementById('brand').value,
+        color: document.getElementById('color').value,
+        size: document.getElementById('size').value,
+        city: document.getElementById('city').value,
+        state: document.getElementById('state').value,
+    };
+    
+    try {
+        const response = await fetch(`/api/v1/products/{{ product.id }}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            showNotification('✅ Producto actualizado correctamente', 'success');
+            setTimeout(() => {
+                window.location.href = '/products/{{ product.id }}/';
+            }, 1500);
+        } else {
+            const error = await response.json();
+            showNotification('❌ Error al actualizar: ' + JSON.stringify(error), 'danger');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('❌ Error al actualizar el producto', 'danger');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+});
+
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow-lg`;
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close ms-2" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.5s';
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
+}
+</script>
+
+<style>
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: rgba(255, 255, 255, 0.5);
+}
+</style>
+{% endblock %}

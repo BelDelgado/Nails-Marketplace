@@ -1,5 +1,19 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage, ProductView, Cart, CartItem
+from django.db.models import Count
+from .models import Category, Product, ProductImage, ProductView
+
+
+class ProductInline(admin.TabularInline):
+    """Mostrar productos dentro de cada categoría"""
+    model = Product
+    extra = 0
+    fields = ('title', 'price', 'stock', 'status', 'seller')
+    readonly_fields = ('title', 'price', 'stock', 'status', 'seller')
+    can_delete = False
+    show_change_link = True  # ← Link para editar el producto
+    
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class ProductImageInline(admin.TabularInline):
@@ -8,14 +22,29 @@ class ProductImageInline(admin.TabularInline):
     extra = 1
     fields = ['image', 'alt_text', 'is_primary', 'order']
 
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     """Administración de categorías"""
-    list_display = ['name', 'slug', 'is_active', 'created_at']
+    list_display = ['name', 'slug', 'product_count', 'is_active', 'created_at']
     list_filter = ['is_active', 'created_at']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at']
+    
+    inlines = [ProductInline]  # ← ESTO MUESTRA LOS PRODUCTOS
+    
+    def get_queryset(self, request):
+        """Optimizar consultas"""
+        qs = super().get_queryset(request)
+        return qs.annotate(prod_count=Count('products'))
+    
+    def product_count(self, obj):
+        """Mostrar cantidad de productos"""
+        return obj.prod_count
+    product_count.short_description = 'Productos'
+    product_count.admin_order_field = 'prod_count'
+
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -51,9 +80,8 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('city', 'state', 'latitude', 'longitude'),
             'classes': ('collapse',)
         }),
-    
-        ('Fechas', {
-            'fields': ('created_at', 'updated_at', 'expires_at'),
+        ('Estadísticas y Fechas', {
+            'fields': ('views', 'created_at', 'updated_at', 'expires_at'),
             'classes': ('collapse',)
         }),
     )
@@ -85,22 +113,7 @@ class ProductViewAdmin(admin.ModelAdmin):
     list_display = ['product', 'user', 'ip_address', 'viewed_at']
     list_filter = ['viewed_at']
     search_fields = ['product__title', 'user__username', 'ip_address']
-    readonly_fields = ['viewed_at']
-
-@admin.register(Cart)
-class CartAdmin(admin.ModelAdmin):
-    """Administración de carritos"""
-    list_display = ['user', 'created_at', 'updated_at', 'get_items_count', 'get_total']
-    readonly_fields = ['created_at', 'updated_at']
-    search_fields = ['user__username']
+    readonly_fields = ['product', 'user', 'ip_address', 'user_agent', 'viewed_at']
     
-    def get_items_count(self, obj):
-        return obj.items.count()
-    get_items_count.short_description = 'Cantidad de items'
-
-@admin.register(CartItem)
-class CartItemAdmin(admin.ModelAdmin):
-    """Administración de items del carrito"""
-    list_display = ['cart', 'product', 'quantity', 'get_subtotal', 'added_at']
-    readonly_fields = ['added_at']
-    search_fields = ['cart__user__username', 'product__title']
+    def has_add_permission(self, request):
+        return False
