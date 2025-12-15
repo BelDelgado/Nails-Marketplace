@@ -3,7 +3,7 @@ from pathlib import Path
 import environ
 from datetime import timedelta
 from decouple import config
-import dj_database_url  # NUEVO
+import dj_database_url 
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
