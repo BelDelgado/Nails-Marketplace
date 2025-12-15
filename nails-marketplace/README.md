@@ -5,7 +5,9 @@ Plataforma colaborativa para la compra y venta de insumos para uñas en comunida
 
 <p align="center">
 <img width="1156" height="350" alt="Image" src="https://github.com/user-attachments/assets/e777523b-982e-46fb-9ffc-6155212c53ec" />
+
 <img width="1134" height="350" alt="Image" src="https://github.com/user-attachments/assets/35909f7f-7efd-4c34-af56-b71105f91988" />
+
 <img width="1134" height="350" alt="Image" src="https://github.com/user-attachments/assets/1deb86e6-3d4a-409f-9d42-0e1779f71dab" />
 </p>
 
