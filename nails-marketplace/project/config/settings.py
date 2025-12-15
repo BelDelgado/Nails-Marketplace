@@ -130,7 +130,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # DATABASE - Configuración unificada con dj_database_url
 # ==========================================
 
-DATABASE_URL_VALUE = os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')
+DATABASE_URL_VALUE = config(
+    'DATABASE_URL', 
+    default='sqlite:///db.sqlite3' 
+)
 
 DATABASES = {
     'default': dj_database_url.parse(
@@ -140,7 +143,7 @@ DATABASES = {
     )
 }
 
-if 'ENGINE' in DATABASES['default'] and DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
     print("✓ Usando SQLite local o fallback de Build")
 else:
     print("✓ Usando Base de Datos de Producción (PostgreSQL)")
