@@ -130,23 +130,27 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # DATABASE - Configuración unificada con dj_database_url
 # ==========================================
 
-DATABASE_URL_VALUE = config(
-    'DATABASE_URL', 
-    default='sqlite:///db.sqlite3' 
-)
+DATABASE_URL_VALUE = config('DATABASE_URL', default='')
 
-DATABASES = {
-    'default': dj_database_url.parse(
-        DATABASE_URL_VALUE, 
-        conn_max_age=600, 
-        conn_health_checks=True
-    )
-}
-
-if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
-    print("✓ Usando SQLite local o fallback de Build")
-else:
+# Si DATABASE_URL existe y es válida, úsala
+if DATABASE_URL_VALUE and '://' in DATABASE_URL_VALUE and len(DATABASE_URL_VALUE) > 5:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            DATABASE_URL_VALUE,
+            conn_max_age=600,
+            conn_health_checks=True
+        )
+    }
     print("✓ Usando Base de Datos de Producción (PostgreSQL)")
+else:
+    # Fallback para build/desarrollo
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    print("✓ Usando SQLite (build/desarrollo)")
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -3,7 +3,7 @@ services:
     name: nails-marketplace
     env: python
     buildCommand: "./build.sh"
-    startCommand: "gunicorn config.wsgi:application"
+    startCommand: "python nails-marketplace/project/manage.py migrate && gunicorn config.wsgi:application"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -12,4 +12,6 @@ services:
       - key: DEBUG
         value: False
       - key: ALLOWED_HOSTS
+        sync: false
+      - key: DATABASE_URL
         sync: false
