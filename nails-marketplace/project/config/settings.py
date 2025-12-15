@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import environ
+import environ import Env
 from datetime import timedelta
 from decouple import config
 import dj_database_url 
@@ -129,41 +129,25 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # ==========================================
 # DATABASE - ACTUALIZADO PARA RENDER
 # ==========================================
-# Primero intenta usar DATABASE_URL (Render/producción)
-DATABASE_URL = config('DATABASE_URL', default=None)
 
-if DATABASE_URL:
-    # Producción con PostgreSQL (Render)
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-    print("✓ Usando PostgreSQL de Render")
-elif env('DATABASE_ENGINE', default=None) == 'django.db.backends.postgresql':
-    # PostgreSQL local (si tienes configurado)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': env('DATABASE_NAME'),
-            'USER': env('DATABASE_USER'),
-            'PASSWORD': env('DATABASE_PASSWORD'),
-            'HOST': env('DATABASE_HOST'),
-            'PORT': env('DATABASE_PORT', default='5432'),
-        }
-    }
-    print("✓ Usando PostgreSQL local")
+DATABASES = {
+    'default': env.db(
+        # 1. Intenta leer la variable de entorno 'DATABASE_URL'
+        'DATABASE_URL',
+        # 2. Si 'DATABASE_URL' no está presente o no es válida, usa SQLite local como fallback
+        default='sqlite:///db.sqlite3' 
+    )
+}
+
+# Configuración adicional para conexión (opcional, env.db lo maneja si se usa dj_database_url)
+DATABASES['default']['CONN_MAX_AGE'] = 600
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+
+# Opcional: imprimir qué base de datos se está usando (solo en la terminal)
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    print("✓ Usando SQLite local o fallback de Build")
 else:
-    # SQLite para desarrollo
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-    print("✓ Usando SQLite local")
+    print("✓ Usando Base de Datos de Producción (PostgreSQL)")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
