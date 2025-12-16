@@ -54,25 +54,29 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-# Redirects después de login/logout
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/"
-ACCOUNT_LOGOUT_REDIRECT_URL = "/"
-
 # Configuración de allauth
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_USERNAME_MIN_LENGTH = 3
 
+# Redirects después de login/logout
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_SIGNUP_REDIRECT_URL = "/"  
+
 # Configuración de social login
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'
-SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_QUERY_EMAIL =  True
+
+# Para mostrar mensajes
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 # Google OAuth - Actualizado para soportar variables de ambiente
 SOCIALACCOUNT_PROVIDERS = { 
